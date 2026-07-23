@@ -1,0 +1,11 @@
+# This file describes a Fastly Compute package. To learn more visit:
+# https://www.fastly.com/documentation/reference/compute/fastly-toml/
+
+authors = ["<devrel@fastly.com>"]
+description = "Starter kit that demonstrates routing, simple synthetic responses and overriding caching rules."
+language = "rust"
+manifest_version = 3
+name = "Default starter for Rust"
+
+[scripts]
+  build = "cargo build --profile release"

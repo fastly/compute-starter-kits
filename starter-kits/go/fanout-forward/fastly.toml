@@ -1,0 +1,28 @@
+# This file describes a Fastly Compute package. To learn more visit:
+# https://www.fastly.com/documentation/reference/compute/fastly-toml
+
+authors = ["<oss@fastly.com>"]
+description = "Enables Fanout on a service, forwarding to a backend."
+language = "go"
+manifest_version = 3
+name = "Fanout forwarding in Go"
+
+[local_server.pushpin]
+enable = true
+
+[local_server.backends]
+[local_server.backends.origin]
+url = "http://localhost:3000/"
+override_host = "localhost:3000"
+
+[setup.backends]
+[setup.backends.origin]
+
+[setup.products]
+[setup.products.fanout]
+enable = true
+
+[scripts]
+build = "go build -o bin/main.wasm ."
+env_vars = ["GOARCH=wasm", "GOOS=wasip1"]
+post_init = "go get github.com/fastly/compute-sdk-go@latest"

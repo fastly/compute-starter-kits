@@ -1,0 +1,26 @@
+[package]
+name = "compute-rust-auth"
+version = "0.4.0"
+authors = []
+edition = "2021"
+# Remove this line if you want to be able to publish this crate on crates.io.
+# Otherwise, `publish = false` prevents an accidental `cargo publish` from revealing private source.
+publish = false
+
+[profile.release]
+debug = 1
+codegen-units = 1
+lto = "fat"
+
+[dependencies]
+fastly = "0.13.0"
+hmac-sha256 = "1.1.7"
+rand = "0.10.1"
+serde = { version = "1.0.203", features = ["derive"] }
+serde_json = "1.0.120"
+base64 = "0.22.1"
+# jwt-simple pulls in the `rsa` crate, which has an open advisory (RUSTSEC-2023-0071,
+# the "Marvin Attack" timing side-channel) with no fixed release available. It only
+# affects RSA private-key operations; this kit only verifies signatures using a
+# public key (see src/jwt.rs), so the vulnerable code path is never exercised here.
+jwt-simple = "0.12.9"

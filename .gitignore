@@ -1,0 +1,62 @@
+# ==========================================
+# System / OS Operational Files
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+
+# ==========================================
+# Monorepo Ingestion Tool Noise
+# ==========================================
+# Safely ignores any remaining local temporary checkout paths if an ingestion fails mid-loop
+.temp-clone-*
+
+# Safely ignores any remaining local staging paths if a build-kv tarball packaging step fails mid-loop
+.temp-tarball-stage-*
+
+# ==========================================
+# Language Dependency & Package Directories
+# ==========================================
+# Catches node_modules at the root, inside ingest/, edge/, and deep inside starter-kits/javascript/
+**/node_modules/
+
+# Python virtual environments and caches
+**/.venv/
+**/env/
+**/venv/
+**/ENV/
+**/__pycache__/
+**/*.pyc
+
+# ==========================================
+# Build Artifacts & Compiled Binaries
+# ==========================================
+# Fastly Compute local execution and packaging outputs
+**/bin/
+**/pkg/
+**/.fastly/
+
+# KV Store content
+edge/test-data/
+
+# Rust compilation targets
+**/target/
+
+# Go compiled binaries and test profiles
+**/*.test
+**/*.out
+
+# ==========================================
+# Local Environment Variables & Secrets
+# ==========================================
+# Prevents accidental leaks of live service IDs, tokens, or testing keys
+.env
+.env.*
+!.env.example
+
+# ==========================================
+# Internal-only documents (not for the public repo)
+# ==========================================
+designdoc.md

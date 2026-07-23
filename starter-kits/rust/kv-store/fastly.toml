@@ -1,0 +1,22 @@
+# This file describes a Fastly Compute package. To learn more visit:
+# https://www.fastly.com/documentation/reference/compute/fastly-toml/
+
+name = "KV Store in Rust"
+description = "A Rust starter kit that uses Fastly's KV Store."
+authors = ["devrel@fastly.com"]
+language = "rust"
+manifest_version = 3
+
+[scripts]
+  build = "cargo build --profile release"
+
+[local_server]
+[local_server.kv_stores]
+[[local_server.kv_stores.my-store]]
+  key = "readme"
+  path = "./README.md"
+
+[setup]
+[setup.kv_stores]
+[setup.kv_stores.my-store]
+  description = "My first kv store"

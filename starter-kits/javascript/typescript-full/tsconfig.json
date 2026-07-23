@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "lib": [ "ES2022" ],
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "customConditions": [ "fastly" ],
+    "types": [ "@fastly/js-compute" ],
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "rootDir": "src",
+    "outDir": "build"
+  },
+  "include": [
+    "./src/**/*.js",
+    "./src/**/*.ts",
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

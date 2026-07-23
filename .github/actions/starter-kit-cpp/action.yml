@@ -1,0 +1,53 @@
+name: Test starter kit written in C++
+
+inputs:
+  kit:
+    description: Path of the starter kit
+  token:
+    description: Token used for access to the GitHub API
+
+runs:
+  using: composite
+  steps:
+    - name: Set up WASI SDK
+      shell: bash
+      # No official action for this. Pinned to version 27
+      # -- local C++ contributors need to match it at this same path.
+      run: |
+        sudo mkdir -p /opt/wasi-sdk
+        curl -fsSL https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-27/wasi-sdk-27.0-x86_64-linux.tar.gz | sudo tar -xz -C /opt/wasi-sdk --strip-components=1
+
+    - name: Run post-init script (if present)
+      uses: ./.github/actions/post-init
+      with:
+        kit: ${{ inputs.kit }}
+
+    - name: Set up Fastly CLI
+      uses: fastly/compute-actions/setup@9ca64d641e165464cd4c0c988f2e549dc7d43b49 # v13
+      with:
+        token: ${{ inputs.token }}
+
+    - name: Build starter kit
+      uses: fastly/compute-actions/build@9ca64d641e165464cd4c0c988f2e549dc7d43b49 # v13
+      with:
+        project_directory: ${{ inputs.kit }}
+        verbose: true
+
+    # ---
+    # Optional: run the kit's own test suite, if it defines one. No kit does today --
+    # this is forward-looking plumbing. Documented, accepted limitation: this can only
+    # meaningfully exercise kit code that doesn't directly depend on the Compute-runtime-
+    # only SDKs (compute-sdk-go / the Rust `fastly` crate / @fastly/js-compute), since
+    # those only function inside Viceroy or a WASI-capable runtime, which nothing here
+    # configures `cargo test`/native `go test` to use.
+    # ---
+    - name: Run kit-specific tests, if any are defined
+      shell: bash
+      working-directory: ${{ inputs.kit }}
+      run: |
+        if grep -q 'enable_testing\|add_test' CMakeLists.txt 2>/dev/null; then
+          echo "Running ctest"
+          ctest --test-dir build
+        else
+          echo "No CTest configuration found -- nothing to run."
+        fi

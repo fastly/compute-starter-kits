@@ -1,0 +1,87 @@
+name: Test starter kit written in Rust
+
+inputs:
+  kit:
+    description: Path of the starter kit
+  token:
+    description: Token used for access to the GitHub API
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Rust cache
+      # No setup-toolchain action needed: rustup ships on ubuntu-latest and auto-installs
+      # whatever channel/target each kit's own rust-toolchain.toml declares.
+      uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+      with:
+        workspaces: ${{ inputs.kit }}
+
+    - name: Install cargo-audit
+      uses: taiki-e/install-action@43aecc8d72668fbcfe75c31400bc4f890f1c5853 # v2.83.2
+      with:
+        tool: cargo-audit, wasm-opt
+
+    - name: Run post-init script (if present)
+      uses: ./.github/actions/post-init
+      with:
+        kit: ${{ inputs.kit }}
+
+    - name: Check
+      shell: bash
+      working-directory: ${{ inputs.kit }}
+      run: RUSTFLAGS="--deny warnings" cargo check
+
+    - name: Format
+      shell: bash
+      working-directory: ${{ inputs.kit }}
+      run: cargo fmt -- --check
+
+    - name: Clippy
+      shell: bash
+      working-directory: ${{ inputs.kit }}
+      run: cargo clippy
+
+    - name: Audit
+      shell: bash
+      working-directory: ${{ inputs.kit }}
+      # RUSTSEC-2023-0071 ("Marvin Attack" timing side-channel in the `rsa` crate) has no
+      # fixed release available upstream. It only affects RSA private-key operations;
+      # kits that only verify signatures with a public key (e.g. rust/auth's JWT
+      # verification, see its src/jwt.rs) never exercise the vulnerable code path.
+      # Ignored globally here since it's a no-op for any kit that doesn't hit it.
+      run: cargo audit --ignore RUSTSEC-2023-0071
+
+    - name: Build (using cargo)
+      shell: bash
+      working-directory: ${{ inputs.kit }}
+      run: RUSTFLAGS="--deny warnings" cargo build --profile release
+
+    - name: Set up Fastly CLI
+      uses: fastly/compute-actions/setup@9ca64d641e165464cd4c0c988f2e549dc7d43b49 # v13
+      with:
+        token: ${{ inputs.token }}
+
+    - name: Build (using CLI)
+      uses: fastly/compute-actions/build@9ca64d641e165464cd4c0c988f2e549dc7d43b49 # v13
+      with:
+        project_directory: ${{ inputs.kit }}
+        verbose: true
+
+    # ---
+    # Optional: run the kit's own test suite, if it defines one. No kit does today --
+    # this is forward-looking plumbing. Documented, accepted limitation: this can only
+    # meaningfully exercise kit code that doesn't directly depend on the Compute-runtime-
+    # only SDKs (compute-sdk-go / the Rust `fastly` crate / @fastly/js-compute), since
+    # those only function inside Viceroy or a WASI-capable runtime, which nothing here
+    # configures `cargo test`/native `go test` to use.
+    # ---
+    - name: Run kit-specific tests, if any are defined
+      shell: bash
+      working-directory: ${{ inputs.kit }}
+      run: |
+        if [ -d tests ] || grep -rq '#\[test\]' src 2>/dev/null; then
+          echo "Running cargo test (native host target, not wasm32-wasip1)"
+          cargo test
+        else
+          echo "No tests/ dir or #[test] found -- nothing to run."
+        fi

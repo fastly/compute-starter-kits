@@ -1,0 +1,30 @@
+# This file describes a Fastly Compute package. To learn more visit:
+# https://developer.fastly.com/reference/fastly-toml/
+
+authors = ["<oss@fastly.com>"]
+description = "Hono Starter Kit for Fastly Compute"
+language = "javascript"
+manifest_version = 3
+name = "Hono framework starter"
+
+[catalog]
+slug = "compute-starter-kit-typescript-hono"
+tags = ["typescript"]
+
+[local_server]
+[local_server.backends]
+[local_server.backends.http-me]
+url = "https://http-me.fastly.dev"
+override_host = "http-me.fastly.dev"
+
+[scripts]
+build = "npm run build"
+post_init = "npm install"
+
+[setup]
+[setup.backends.http-me]
+address = "http-me.fastly.dev"
+description = "HTTP testing endpoint"
+port = 443
+
+[setup.log_endpoints.my_endpoint]

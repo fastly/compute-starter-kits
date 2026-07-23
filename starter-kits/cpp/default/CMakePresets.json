@@ -1,0 +1,14 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "wasi",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_TOOLCHAIN_FILE": "/opt/wasi-sdk/share/cmake/wasi-sdk-p1.cmake"
+      }
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+name: Test starter kits
+
+# For every starter kit touched by a PR: build it exactly the way a real customer's
+# toolchain would (via fastly.toml's own [scripts] contract, through the real Fastly
+# CLI), smoke-test that it actually serves a request, and run the kit's own test suite
+# if it happens to define one.
+
+# It stays on plain `pull_request` (never `pull_request_target`), since it builds untrusted
+# fork-PR code.
+
+on:
+  pull_request:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  detect-kits:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      kits: ${{ steps.group.outputs.kits }}
+      has_kits: ${{ steps.group.outputs.has_kits }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+
+      - uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
+        id: filter
+        with:
+          filters: |
+            kits:
+              - 'starter-kits/**'
+          list-files: json
+
+      - name: Group files into (language, kit, skip_smoke_test) tuples
+        id: group
+        env:
+          CHANGED_FILES: ${{ steps.filter.outputs.kits_files }}
+          ALL_KITS: ${{ contains(github.event.pull_request.labels.*.name, 'all-kits') }}
+        run: node tools/list-kits.mts >> "$GITHUB_OUTPUT"
+
+  test-kit:
+    needs: detect-kits
+    if: needs.detect-kits.outputs.has_kits == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.detect-kits.outputs.kits) }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Test (Go)
+        if: matrix.language == 'go'
+        uses: ./.github/actions/starter-kit-go
+        with:
+          kit: starter-kits/${{ matrix.language }}/${{ matrix.kit }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Test (Rust)
+        if: matrix.language == 'rust'
+        uses: ./.github/actions/starter-kit-rust
+        with:
+          kit: starter-kits/${{ matrix.language }}/${{ matrix.kit }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Test (JavaScript)
+        if: matrix.language == 'javascript'
+        uses: ./.github/actions/starter-kit-javascript
+        with:
+          kit: starter-kits/${{ matrix.language }}/${{ matrix.kit }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Test (C++)
+        if: matrix.language == 'cpp'
+        uses: ./.github/actions/starter-kit-cpp
+        with:
+          kit: starter-kits/${{ matrix.language }}/${{ matrix.kit }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Smoke test
+        if: matrix.skip_smoke_test != true
+        uses: ./.github/actions/smoke-test
+        with:
+          working-directory: starter-kits/${{ matrix.language }}/${{ matrix.kit }}

@@ -1,0 +1,11 @@
+# This file describes a Fastly Compute package. To learn more visit:
+# https://www.fastly.com/documentation/reference/compute/fastly-toml/
+
+authors = ["devrel@fastly.com"]
+description = "Rust Starter Kit for Fastly Compute with advanced caching features"
+language = "rust"
+manifest_version = 3
+name = "Advanced Caching in Rust"
+
+[scripts]
+  build = "cargo build --profile release"

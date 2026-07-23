@@ -1,0 +1,26 @@
+[package]
+name = "fastly-compute-project"
+version = "0.1.0"
+authors = []
+edition = "2021"
+# Remove this line if you want to be able to publish this crate on crates.io.
+# Otherwise, `publish = false` prevents an accidental `cargo publish` from revealing private source.
+publish = false
+
+[profile.release]
+debug = 1
+codegen-units = 1
+lto = "fat"
+
+[dependencies]
+cfg-if = "1.0.0"
+fastly = "0.13.0"
+hex = { version = "0.4.3", optional = true }
+hmac-sha256 = { version = "1.1.7", optional = true }
+regex = "1.10.2"
+time = { version = "0.3.23", features = ["formatting"] }
+urlencoding = { version = "2.1.3", optional = true }
+
+[features]
+default = ["auth"]
+auth = ["hmac-sha256", "hex", "urlencoding"]

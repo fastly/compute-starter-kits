@@ -1,0 +1,38 @@
+# This file describes a Fastly Compute package. To learn more visit:
+# https://developer.fastly.com/reference/fastly-toml/
+
+authors = ["oss@fastly.com"]
+description = "A TypeScript starter kit that uses Fastly's KV Store."
+language = "javascript"
+manifest_version = 2
+name = "KV Store in TypeScript"
+service_id = ""
+
+[catalog]
+slug = "compute-starter-kit-typescript-kv-store"
+tags = ["typescript"]
+
+[local_server]
+
+  [local_server.backends]
+
+  [local_server.kv_stores]
+
+    [[local_server.kv_stores.my-store]]
+      data = "placeholder"
+      key = "placeholder"
+
+    [[local_server.kv_stores.my-store]]
+      key = "readme"
+      path = "./README.md"
+
+[scripts]
+  build = "npm run build"
+  post_init = "npm install"
+
+[setup]
+
+  [setup.kv_stores]
+
+    [setup.kv_stores.my-store]
+      description = "My first kv store"

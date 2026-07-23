@@ -1,0 +1,17 @@
+{
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@fastly/js-compute": "^3.41.1"
+  },
+  "devDependencies": {
+    "@fastly/cli": "^15.0.0",
+    "typescript": "^6.0.0"
+  },
+  "scripts": {
+    "prebuild": "tsc",
+    "build": "js-compute-runtime src/index.ts bin/main.wasm",
+    "start": "fastly compute serve",
+    "deploy": "fastly compute publish"
+  }
+}

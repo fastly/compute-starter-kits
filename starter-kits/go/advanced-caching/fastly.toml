@@ -1,0 +1,13 @@
+# This file describes a Fastly Compute package. To learn more visit:
+# https://developer.fastly.com/reference/fastly-toml/
+
+ authors = ["oss@fastly.com"]
+description = "Go Starter Kit for Fastly Compute with advanced caching features"
+language = "go"
+manifest_version = 3
+name = "Advanced Caching in Go"
+
+[scripts]
+env_vars = ["GOARCH=wasm", "GOOS=wasip1"]
+build = "go build -tags=fsthttp_guest_cache -o bin/main.wasm ."
+post_init = "go get github.com/fastly/compute-sdk-go@latest"

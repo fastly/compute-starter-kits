@@ -1,0 +1,41 @@
+name: Smoke test
+
+inputs:
+  working-directory:
+    description: Directory where the test should be run
+
+runs:
+  using: composite
+  steps:
+    - name: Smoke test via fastly compute serve
+      working-directory: ${{ inputs.working-directory }}
+      shell: bash
+      run: |
+        fastly compute serve --skip-build --non-interactive --addr=127.0.0.1:7676 &
+        SERVER_PID=$!
+
+        READY=false
+        for i in $(seq 1 30); do
+          if ! kill -0 $SERVER_PID 2>/dev/null; then
+            echo "Server process exited before becoming ready"
+            exit 1
+          fi
+          if curl -s --max-time 5 -o /dev/null http://127.0.0.1:7676/; then
+            READY=true
+            break
+          fi
+          sleep 1
+        done
+
+        if [ "$READY" != "true" ]; then
+          echo "Server did not respond within 30 seconds"
+          exit 1
+        fi
+
+        echo "Got a response:"
+        curl -s --max-time 10 -o /dev/null -w "HTTP %{http_code}\n" http://127.0.0.1:7676/ || true
+
+    - name: Stop local server
+      if: always()
+      shell: bash
+      run: pkill -f "fastly compute serve" || true

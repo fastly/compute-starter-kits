@@ -1,0 +1,78 @@
+name: Test starter kit written in Go
+
+inputs:
+  kit:
+    description: Path of the starter kit
+  token:
+    description: Token used for access to the GitHub API
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Go
+      if: inputs.kit != 'starter-kits/go/tinygo'
+      uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      with:
+        go-version-file: ${{ inputs.kit }}/go.mod
+        cache-dependency-path: ${{ inputs.kit }}/go.sum
+
+    - name: Set up Go (host toolchain for TinyGo)
+      # The tinygo kit's go.mod states "go 1.17" (its minimum *language* version), but
+      # the tinygo compiler itself needs a much newer host Go -- these are independent.
+      # Must be >=1.24: tinygo 0.41.1's bundled net/http calls strings.SplitSeq/
+      # FieldsFuncSeq (added in Go 1.24's stdlib), even though tinygo's own compat
+      # matrix claims 1.23 support -- see https://github.com/tinygo-org/tinygo/issues/5446.
+      if: inputs.kit == 'starter-kits/go/tinygo'
+      uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      with:
+        go-version: '1.24'
+        cache-dependency-path: ${{ inputs.kit }}/go.sum
+
+    - name: Set up TinyGo
+      if: inputs.kit == 'starter-kits/go/tinygo'
+      uses: acifani/setup-tinygo@dd8a7075d951a7595b2ef2123ed0ab1af0c13e56 # v3.0.0
+      with:
+        tinygo-version: '0.41.1'
+
+    - name: Run post-init script (if present)
+      uses: ./.github/actions/post-init
+      with:
+        kit: ${{ inputs.kit }}
+
+    - name: Set up Fastly CLI
+      uses: fastly/compute-actions/setup@9ca64d641e165464cd4c0c988f2e549dc7d43b49 # v13
+      with:
+        token: ${{ inputs.token }}
+
+    - name: Build kit
+      uses: fastly/compute-actions/build@9ca64d641e165464cd4c0c988f2e549dc7d43b49 # v13
+      with:
+        project_directory: ${{ inputs.kit }}
+        verbose: true
+
+    - name: Run 'go vet'
+      shell: bash
+      working-directory: ${{ inputs.kit }}
+      env:
+        GOOS: wasip1
+        GOARCH: wasm
+      run: go vet ./...
+
+    # ---
+    # Optional: run the kit's own test suite, if it defines one. No kit does today --
+    # this is forward-looking plumbing. Documented, accepted limitation: this can only
+    # meaningfully exercise kit code that doesn't directly depend on the Compute-runtime-
+    # only SDKs (compute-sdk-go / the Rust `fastly` crate / @fastly/js-compute), since
+    # those only function inside Viceroy or a WASI-capable runtime, which nothing here
+    # configures `cargo test`/native `go test` to use.
+    # ---
+    - name: Run kit-specific tests, if any are defined
+      shell: bash
+      working-directory: ${{ inputs.kit }}
+      run: |
+        if find . -name '*_test.go' | grep -q .; then
+          echo "Running go test (native host target, not the wasm cross-compile target)"
+          go test ./...
+        else
+          echo "No *_test.go files found -- nothing to run."
+        fi

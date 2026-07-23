@@ -1,0 +1,11 @@
+[bigquery]
+service_account_email = "service-account-name@project-id.iam.gserviceaccount.com"
+service_account_key = "-----BEGIN PRIVATE KEY-----\nSAMPLEKEY\n-----END PRIVATE KEY-----\n"
+scope ="https://www.googleapis.com/auth/bigquery"
+projectid = "bigquery-public-data"
+dataset_tableid = "google_trends.top_rising_terms"
+
+[gcp]
+alg = "RS256"
+aud = "https://oauth2.googleapis.com/token"
+grant_type = "urn:ietf:params:oauth:grant-type:jwt-bearer"

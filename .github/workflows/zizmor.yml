@@ -1,0 +1,37 @@
+name: GitHub Actions Security Analysis with zizmor
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["**"]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  zizmor:
+    name: Run zizmor
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # Required for upload-sarif (used by zizmor-action) to upload SARIF files.
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Run zizmor
+        uses: zizmorcore/zizmor-action@192e21d79ab29983730a13d1382995c2307fbcaa # v0.5.7
+        with:
+          # GitHub Code Scanning (which backs the SARIF upload this action does
+          # internally) isn't available for private repos without GitHub Advanced
+          # Security. Skip just the upload while private so this check doesn't
+          # show as a false failure -- zizmor itself still runs and lints either
+          # way. This flips back on automatically once the repo goes public.
+          advanced-security: ${{ !github.event.repository.private }}
+          annotations:  ${{ github.event.repository.private }}

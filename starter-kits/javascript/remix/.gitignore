@@ -1,0 +1,13 @@
+node_modules
+
+/.cache
+/build
+/public/build
+.env
+
+# Fastly Compute
+/bin
+/pkg
+
+# @fastly/compute-js-static-publish
+/static-publisher

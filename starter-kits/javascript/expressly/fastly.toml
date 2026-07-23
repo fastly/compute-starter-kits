@@ -1,0 +1,12 @@
+# This file describes a Fastly Compute package. To learn more visit:
+# https://developer.fastly.com/reference/fastly-toml/
+
+authors = ["<oss@fastly.com>"]
+description = "A basic expressly starter kit that demonstrates simple GET, POST, and middleware functionality."
+language = "javascript"
+manifest_version = 2
+name = "Expressly starter"
+
+[scripts]
+build = "npm run build"
+post_init = "npm install"

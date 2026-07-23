@@ -1,0 +1,12 @@
+# This file describes a Fastly Compute package. To learn more visit:
+# https://www.fastly.com/documentation/reference/compute/fastly-toml
+
+authors = ["<devrel@fastly.com>"]
+description = "Starter kit for C++ that demonstrates routing, simple synthetic responses, and overriding caching rules."
+language = "cpp"
+manifest_version = 3
+name = "Default starter for C++"
+
+[scripts]
+post_init = "cmake --preset wasi"
+build = "cmake --build build && cp build/main.wasm bin/main.wasm"

@@ -1,0 +1,53 @@
+name: Test starter kit written in JavaScript
+
+inputs:
+  kit:
+    description: Path of the starter kit
+  token:
+    description: Token used for access to the GitHub API
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Node
+      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      with:
+        node-version: '24'
+        cache: npm
+        cache-dependency-path: ${{ inputs.kit }}/package-lock.json
+
+    - name: Run post-init script (if present)
+      uses: ./.github/actions/post-init
+      with:
+        kit: ${{ inputs.kit }}
+
+    - name: Set up Fastly CLI
+      uses: fastly/compute-actions/setup@9ca64d641e165464cd4c0c988f2e549dc7d43b49 # v13
+      with:
+        token: ${{ inputs.token }}
+
+    - name: Build starter kit
+      uses: fastly/compute-actions/build@9ca64d641e165464cd4c0c988f2e549dc7d43b49 # v13
+      with:
+        project_directory: ${{ inputs.kit }}
+        verbose: true
+
+    # ---
+    # Optional: run the kit's own test suite, if it defines one. No kit does today --
+    # this is forward-looking plumbing. Documented, accepted limitation: this can only
+    # meaningfully exercise kit code that doesn't directly depend on the Compute-runtime-
+    # only SDKs (compute-sdk-go / the Rust `fastly` crate / @fastly/js-compute), since
+    # those only function inside Viceroy or a WASI-capable runtime, which nothing here
+    # configures `cargo test`/native `go test` to use.
+    # ---
+    - name: Run kit-specific tests, if any are defined
+      shell: bash
+      working-directory: ${{ inputs.kit }}
+      run: |
+        TEST_SCRIPT=$(node -pe "require('./package.json').scripts?.test || ''")
+        if [ -n "$TEST_SCRIPT" ] && [ "$TEST_SCRIPT" != 'echo "Error: no test specified" && exit 1' ]; then
+          echo "Running npm test"
+          npm test
+        else
+          echo "No real \"test\" script defined -- nothing to run."
+        fi

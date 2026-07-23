@@ -1,0 +1,60 @@
+authors = ["oss@fastly.com"]
+description = "Park your users in a virtual queue to reduce the demand on your origins during peak times."
+language = "javascript"
+manifest_version = 2
+name = "Queuing / Waiting room in JavaScript"
+
+[catalog]
+topics = ["rate-limiting"]
+[[catalog.files]]
+filename = "screenshot.png"
+content_type = "image/png"
+
+[scripts]
+  build = "npm run build"
+  post_init = "npm install"
+
+[local_server]
+
+  [local_server.backends]
+
+    [local_server.backends.protected_content]
+      override_host = "example-bucket.s3-website.eu-west-2.amazonaws.com"
+      url = "http://example-bucket.s3-website.eu-west-2.amazonaws.com"
+
+    [local_server.backends.upstash]
+      override_host = "eu1-close-treefrog-35041.upstash.io"
+      url = "https://eu1-close-treefrog-35041.upstash.io"
+
+  [local_server.config_stores]
+
+    [local_server.config_stores.config]
+      file = "devconfig.example.json"
+      format = "json"
+
+[setup]
+
+  [setup.backends]
+
+    [setup.backends.protected_content]
+
+    [setup.backends.upstash]
+
+  [setup.config_stores]
+
+    [setup.config_stores.config]
+
+      [setup.config_stores.config.items]
+
+        [setup.config_stores.config.items.jwt_secret]
+          description = "Secret for JWT signing"
+
+        [setup.config_stores.config.items.upstash_token]
+          description = "Token for Upstash REST API"
+
+        [setup.config_stores.config.items.upstash_url]
+          description = "URL of Upstash service (e.g. https://eu1-close-treefrog-35041.upstash.io)"
+
+  [setup.log_endpoints]
+
+    [setup.log_endpoints.queue_logs]

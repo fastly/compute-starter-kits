@@ -1,0 +1,33 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: tuesday
+    labels:
+      - github-actions
+      - skip-changelog
+    groups:
+      gha-dependencies:
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 7
+
+  - package-ecosystem: npm
+    directories:
+      - edge
+      - tools
+    schedule:
+      interval: weekly
+      day: tuesday
+    labels:
+      - internal-dependencies
+      - skip-changelog
+    groups:
+      npm:
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 7

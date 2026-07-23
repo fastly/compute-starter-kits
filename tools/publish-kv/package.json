@@ -1,0 +1,19 @@
+{
+  "name": "starter-kits-publish-kv-tool",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Production optimization sync tool to publish monorepo bundles to Fastly KV Store using smart file-hash metadata gating",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "tsc --noEmit && node src/index.ts",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^6.0.0",
+    "vitest": "^4.1.10"
+  }
+}

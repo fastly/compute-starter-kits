@@ -1,0 +1,117 @@
+name: Publish KV data & deploy edge
+
+# publish-kv always runs on a push to main (build-kv + publish-kv are hash-gated and
+# idempotent, so redundant runs are cheap by design). deploy-edge only runs afterwards
+# (`needs: publish-kv`) and only when edge/ itself changed, or when forced manually --
+# this is deliberately ONE workflow with sequential jobs rather than two independently
+# `push`-triggered workflows, so a merge touching both starter-kits/** and edge/** can't
+# race and deploy edge/ against stale/incomplete KV data (see CLAUDE.md).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      force_deploy_edge:
+        description: 'Deploy edge/ even if it did not change in the latest push'
+        type: boolean
+        default: false
+
+concurrency:
+  group: publish-kv-main
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+
+jobs:
+  publish-kv:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+
+      - name: Build KV dataset
+        working-directory: tools/build-kv
+        run: |
+          npm ci
+          node src/index.ts
+
+      - name: Publish to the real Fastly KV store
+        working-directory: tools/publish-kv
+        env:
+          FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
+          FASTLY_KV_STORE_ID: ${{ secrets.FASTLY_KV_STORE_ID }}
+        run: |
+          npm ci
+          node src/index.ts
+
+  detect-edge-change:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    outputs:
+      changed: ${{ steps.filter.outputs.edge }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
+        id: filter
+        with:
+          filters: |
+            edge:
+              - 'edge/**'
+
+  deploy-edge:
+    needs: [publish-kv, detect-edge-change]
+    # NOTE: the `always()` below suppresses the implied `success()`
+    # Without it, this job would be skipped if any of the `needs` above are skipped
+    if: |
+      always() && needs.publish-kv.result == 'success' &&
+      (needs.detect-edge-change.outputs.changed == 'true' || github.event.inputs.force_deploy_edge == 'true')
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+
+      - name: Install edge/ dependencies
+        working-directory: edge
+        run: npm ci
+
+      - name: Set up Fastly CLI
+        uses: fastly/compute-actions/setup@a25cf83ef5c19ef7d86f1eebffcd8f6c02ddc786 # v14
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Compute package
+        uses: fastly/compute-actions/build@a25cf83ef5c19ef7d86f1eebffcd8f6c02ddc786 # v14
+        with:
+          project_directory: edge
+          verbose: true
+
+      - name: Deploy Compute package
+        uses: fastly/compute-actions/deploy@a25cf83ef5c19ef7d86f1eebffcd8f6c02ddc786 # v14
+        with:
+          project_directory: edge
+          service_id: ${{ secrets.FASTLY_SERVICE_ID }}
+          comment: 'Deployed via GitHub Actions (${{ github.sha }})'
+        env:
+          FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}

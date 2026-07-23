@@ -1,0 +1,27 @@
+{
+  "name": "fastly-starter-kits-edge-service",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Monorepo Edge Service serving manifest listings and tarball scaffolding streams",
+  "main": "src/index.ts",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "prebuild": "tsc --noEmit",
+    "build": "js-compute-runtime src/index.ts bin/main.wasm",
+    "deploy": "fastly compute deploy",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fastly/js-compute": "^3.43.1",
+    "@fastly/hono-fastly-compute": "^0.3.10",
+    "hono": "^4.12.30"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
+  }
+}

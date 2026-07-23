@@ -1,0 +1,24 @@
+name: Run post-init script
+
+inputs:
+  kit:
+    description: Path of the starter kit
+
+runs:
+  using: composite
+  steps:
+    - name: Smoke test via fastly compute serve
+      working-directory: ${{ inputs.kit }}
+      shell: bash
+      run: |
+        python3 -c "
+        import subprocess, tomllib
+        with open('fastly.toml', 'rb') as f:
+            doc = tomllib.load(f)
+        cmd = doc.get('scripts', {}).get('post_init')
+        if cmd:
+            print(f'Running post_init: {cmd}')
+            subprocess.run(cmd, shell=True, check=True)
+        else:
+            print('No post_init declared.')
+        "

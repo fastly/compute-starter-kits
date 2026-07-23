@@ -1,0 +1,17 @@
+manifest_version = 3
+name = "fastly-starter-kits-edge-service"
+description = "Monorepo Edge Service serving manifest listings and tarball scaffolding streams"
+language = "javascript"
+
+[local_server.kv_stores]
+compute_starter_kits = { file = "./test-data/kv_store_mock.json", format = "json" }
+
+[setup]
+
+  [setup.kv_stores]
+
+    [setup.kv_stores.compute_starter_kits]
+      description = "Compute Starter Kits catalog data (manifest, readmes, tarballs, file assets) -- populated by tools/build-kv + tools/publish-kv, not manually"
+
+[scripts]
+build = "npm run build"

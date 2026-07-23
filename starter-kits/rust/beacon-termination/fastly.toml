@@ -1,0 +1,8 @@
+name = "Beacon termination in Rust"
+description = "Capture beacon data from the browser, divert beacon request payloads to a log endpoint, and avoid putting load on your own infrastructure."
+authors = ["<devrel@fastly.com>"]
+language = "rust"
+manifest_version = 3
+
+[scripts]
+  build = "cargo build --profile release"

@@ -1,0 +1,31 @@
+name = "Realtime starter for Rust"
+description = "Implements realtime handlers for SSE, WebSockets, etc., powered by Fanout"
+authors = ["<devrel@fastly.com>"]
+language = "rust"
+manifest_version = 3
+
+[catalog]
+topics = ["real-time"]
+
+[local_server.pushpin]
+enable = true
+
+[local_server.backends]
+[local_server.backends.origin]
+url = "https://example.com/"
+override_host = "example.com"
+
+[local_server.backends.self]
+url = "http://localhost:7676/"
+override_host = "localhost:7676"
+
+[setup.backends]
+[setup.backends.origin]
+[setup.backends.self]
+
+[setup.products]
+[setup.products.fanout]
+enable = true
+
+[scripts]
+build = "cargo build --profile release"

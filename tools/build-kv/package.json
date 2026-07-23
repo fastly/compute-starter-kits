@@ -1,0 +1,22 @@
+{
+  "name": "starter-kits-build-kv-tool",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Compiles starter-kits into structured tarballs and index files for local mock KV Store serving",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "tsc --noEmit && node src/index.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "smol-toml": "^1.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^6.0.0",
+    "vitest": "^4.1.10"
+  }
+}

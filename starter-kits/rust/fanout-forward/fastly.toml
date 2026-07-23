@@ -1,0 +1,29 @@
+# This file describes a Fastly Compute package. To learn more visit:
+# https://www.fastly.com/documentation/reference/compute/fastly-toml/
+
+name = "Fanout forwarding in Rust"
+description = "Enables Fanout on a service, forwarding to a backend."
+authors = ["<devrel@fastly.com>"]
+language = "rust"
+manifest_version = 3
+
+[catalog]
+topics = ["real-time"]
+
+[local_server.pushpin]
+enable = true
+
+[local_server.backends]
+[local_server.backends.origin]
+url = "http://localhost:3000/"
+override_host = "localhost:3000"
+
+[setup.backends]
+[setup.backends.origin]
+
+[setup.products]
+[setup.products.fanout]
+enable = true
+
+[scripts]
+build = "cargo build --profile release"
