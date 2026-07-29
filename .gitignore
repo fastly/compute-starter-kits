@@ -55,8 +55,3 @@ edge/test-data/
 .env
 .env.*
 !.env.example
-
-# ==========================================
-# Internal-only documents (not for the public repo)
-# ==========================================
-designdoc.md

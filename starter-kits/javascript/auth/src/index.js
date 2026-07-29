@@ -81,6 +81,10 @@ async function handleRequest (event) {
         -settings.config.stateParameterLength
       )
 
+      if (!util.isSafeRedirectTarget(originalReqPath)) {
+        return new Response('Invalid redirect target.', { status: 400 })
+      }
+
       // Parse the response body from the authorize step.
       const auth = await exchangeRes.json()
 
@@ -167,9 +171,10 @@ async function handleRequest (event) {
   const pkce = await pkceChallenge()
 
   // Generate the OAuth 2.0 state parameter, used to prevent CSRF attacks, and store the original request path and query string.
+  const safePath = util.isSafeRedirectTarget(url.pathname) ? url.pathname : '/'
   const randState = util.generateRandomStr(settings.config.stateParameterLength)
   const sep = url.search.length ? '?' : ''
-  const state = `${url.pathname}${sep}${url.search}${randState}`
+  const state = `${safePath}${sep}${url.search}${randState}`
 
   // Generate the OpenID Connect nonce, used to mitigate replay attacks. This is a random value with a twist: it is a time limited token (JWT) that encodes the nonce and the state within its claims.
   const { stateAndNonce, nonce } = await jwt.generateNonceFromState(

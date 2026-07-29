@@ -14,6 +14,42 @@ pub struct BqQueryReq {
     query: String,
     location: String,
     use_legacy_sql: bool,
+    #[serde(rename = "parameterMode", skip_serializing_if = "Option::is_none")]
+    parameter_mode: Option<String>,
+    #[serde(rename = "queryParameters", skip_serializing_if = "Option::is_none")]
+    query_parameters: Option<Vec<QueryParameter>>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct QueryParameter {
+    name: String,
+    #[serde(rename = "parameterType")]
+    parameter_type: QueryParameterType,
+    #[serde(rename = "parameterValue")]
+    parameter_value: QueryParameterValue,
+}
+
+impl QueryParameter {
+    fn new(name: &str, bq_type: &str, value: String) -> Self {
+        Self {
+            name: name.to_string(),
+            parameter_type: QueryParameterType {
+                type_: bq_type.to_string(),
+            },
+            parameter_value: QueryParameterValue { value },
+        }
+    }
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct QueryParameterType {
+    #[serde(rename = "type")]
+    type_: String,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct QueryParameterValue {
+    value: String,
 }
 
 fn gcp_bq_job_query(
@@ -107,9 +143,23 @@ pub fn handle_insert_req(req: &mut Request) -> Result<Response, Error> {
     }
     let top_rising_terms: TopRisingTerms = req.take_body_json::<TopRisingTerms>()?;
     let query = format!(
-        "INSERT INTO {}.{} (refresh_date, dma_name, dma_id, term, week, score, rank, percent_gain) VALUES ('{}', '{}', {}, '{}', '{}', {}, {}, {})",
-        tomlfile.bigquery.projectid, tomlfile.bigquery.dataset_tableid, top_rising_terms.refresh_date, top_rising_terms.dma_name, top_rising_terms.dma_id, top_rising_terms.term, top_rising_terms.week, top_rising_terms.score, top_rising_terms.rank, top_rising_terms.percent_gain);
-    match handle_bq_query_req(&tomlfile, &query) {
+        "INSERT INTO {}.{} (refresh_date, dma_name, dma_id, term, week, score, rank, percent_gain) VALUES (@refresh_date, @dma_name, @dma_id, @term, @week, @score, @rank, @percent_gain)",
+        tomlfile.bigquery.projectid, tomlfile.bigquery.dataset_tableid);
+    let query_parameters = vec![
+        QueryParameter::new("refresh_date", "DATE", top_rising_terms.refresh_date),
+        QueryParameter::new("dma_name", "STRING", top_rising_terms.dma_name),
+        QueryParameter::new("dma_id", "INT64", top_rising_terms.dma_id.to_string()),
+        QueryParameter::new("term", "STRING", top_rising_terms.term),
+        QueryParameter::new("week", "DATE", top_rising_terms.week),
+        QueryParameter::new("score", "INT64", top_rising_terms.score.to_string()),
+        QueryParameter::new("rank", "INT64", top_rising_terms.rank.to_string()),
+        QueryParameter::new(
+            "percent_gain",
+            "INT64",
+            top_rising_terms.percent_gain.to_string(),
+        ),
+    ];
+    match handle_bq_query_req(&tomlfile, &query, Some(query_parameters)) {
         Ok(x) => x,
         Err(e) => {
             let msg = format!("BQ Insert Error: {e}, query: {query}");
@@ -135,7 +185,15 @@ pub fn handle_get_req(req: &Request) -> Result<Response, Error> {
     let to_str = query_string["to"].as_str();
     let condition = match (from_str, to_str) {
         (None, None) => "week >= DATE_TRUNC(CURRENT_DATE(), week)".to_string(),
-        (Some(x), None) => format!("week >= '{x}'"),
+        (Some(x), None) => {
+            let format = format_description::parse_borrowed::<1>("[year]-[month]-[day]")?;
+            if let Err(e) = Date::parse(x, &format) {
+                let msg = format!("Error parsing date: {e}");
+                error!("{msg}");
+                panic_with_status!(400, "{}", msg);
+            }
+            format!("week >= '{x}'")
+        }
         (None, Some(y)) => {
             let format = format_description::parse_borrowed::<1>("[year]-[month]-[day]")?;
             let to_date = match Date::parse(y, &format) {
@@ -189,7 +247,7 @@ pub fn handle_get_req(req: &Request) -> Result<Response, Error> {
         "SELECT * FROM {}.{} where {}",
         tomlfile.bigquery.projectid, tomlfile.bigquery.dataset_tableid, condition
     );
-    let bqresp_json = match handle_bq_query_req(&tomlfile, &query) {
+    let bqresp_json = match handle_bq_query_req(&tomlfile, &query, None) {
         Ok(x) => x,
         Err(e) => {
             let msg = format!("{e}, query: {query}");
@@ -253,7 +311,11 @@ pub fn handle_get_req(req: &Request) -> Result<Response, Error> {
     Ok(Response::from_status(StatusCode::OK).with_body_json(&resp_json)?)
 }
 
-pub fn handle_bq_query_req(tomlfile: &Config, query: &str) -> Result<serde_json::Value, Error> {
+pub fn handle_bq_query_req(
+    tomlfile: &Config,
+    query: &str,
+    query_parameters: Option<Vec<QueryParameter>>,
+) -> Result<serde_json::Value, Error> {
     println!("Start BQ Query");
     // Get Access Token to access BQ.
     let req_url = format!(
@@ -275,6 +337,8 @@ pub fn handle_bq_query_req(tomlfile: &Config, query: &str) -> Result<serde_json:
         query: query.to_string(),
         location: "US".to_string(),
         use_legacy_sql: false,
+        parameter_mode: query_parameters.as_ref().map(|_| "NAMED".to_string()),
+        query_parameters,
     };
     let bqresp_str = match gcp_bq_job_query(&access_token, &req_url, querydata) {
         Ok(x) => x,

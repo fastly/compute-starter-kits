@@ -10,7 +10,7 @@ const attrs = () => ({
   path: '/',
   sameSite: 'lax',
   secure: Boolean(env('FASTLY_SERVICE_VERSION')),
-  HttpOnly: true
+  httpOnly: true
 })
 
 export const session = (name, value) =>
