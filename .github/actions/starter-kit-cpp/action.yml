@@ -23,12 +23,12 @@ runs:
         kit: ${{ inputs.kit }}
 
     - name: Set up Fastly CLI
-      uses: fastly/compute-actions/setup@9ca64d641e165464cd4c0c988f2e549dc7d43b49 # v13
+      uses: fastly/compute-actions/setup@a25cf83ef5c19ef7d86f1eebffcd8f6c02ddc786 # v14
       with:
         token: ${{ inputs.token }}
 
     - name: Build starter kit
-      uses: fastly/compute-actions/build@9ca64d641e165464cd4c0c988f2e549dc7d43b49 # v13
+      uses: fastly/compute-actions/build@a25cf83ef5c19ef7d86f1eebffcd8f6c02ddc786 # v14
       with:
         project_directory: ${{ inputs.kit }}
         verbose: true

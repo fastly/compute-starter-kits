@@ -11,7 +11,7 @@ runs:
   steps:
     - name: Set up Go
       if: inputs.kit != 'starter-kits/go/tinygo'
-      uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
       with:
         go-version-file: ${{ inputs.kit }}/go.mod
         cache-dependency-path: ${{ inputs.kit }}/go.sum
@@ -23,7 +23,7 @@ runs:
       # FieldsFuncSeq (added in Go 1.24's stdlib), even though tinygo's own compat
       # matrix claims 1.23 support -- see https://github.com/tinygo-org/tinygo/issues/5446.
       if: inputs.kit == 'starter-kits/go/tinygo'
-      uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
       with:
         go-version: '1.24'
         cache-dependency-path: ${{ inputs.kit }}/go.sum
@@ -40,12 +40,12 @@ runs:
         kit: ${{ inputs.kit }}
 
     - name: Set up Fastly CLI
-      uses: fastly/compute-actions/setup@9ca64d641e165464cd4c0c988f2e549dc7d43b49 # v13
+      uses: fastly/compute-actions/setup@a25cf83ef5c19ef7d86f1eebffcd8f6c02ddc786 # v14
       with:
         token: ${{ inputs.token }}
 
     - name: Build kit
-      uses: fastly/compute-actions/build@9ca64d641e165464cd4c0c988f2e549dc7d43b49 # v13
+      uses: fastly/compute-actions/build@a25cf83ef5c19ef7d86f1eebffcd8f6c02ddc786 # v14
       with:
         project_directory: ${{ inputs.kit }}
         verbose: true
