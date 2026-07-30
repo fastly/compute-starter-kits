@@ -31,3 +31,68 @@ updates:
           - "*"
     cooldown:
       default-days: 7
+
+  - package-ecosystem: cargo
+    directory: /starter-kits/rust/*
+    schedule:
+      interval: weekly
+      day: tuesday
+    labels:
+      - dependencies
+      - skip-changelog
+    groups:
+      fastly:
+        group-by: dependency-name
+        patterns:
+          - fastly
+          - log-fastly
+      cargo:
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 7
+      exclude:
+        - fastly
+        - log-fastly
+
+  - package-ecosystem: npm
+    directory: /starter-kits/javascript/*
+    schedule:
+      interval: weekly
+      day: tuesday
+    labels:
+      - dependencies
+      - skip-changelog
+    groups:
+      fastly:
+        group-by: dependency-name
+        patterns:
+          - @fastly/js-compute
+      npm:
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 7
+      exclude:
+        - @fastly/js-compute
+
+  - package-ecosystem: gomod
+    directory: /starter-kits/go/*
+    schedule:
+      interval: weekly
+      day: tuesday
+    labels:
+      - dependencies
+      - skip-changelog
+    groups:
+      fastly:
+        group-by: dependency-name
+        patterns:
+          - github.com/fastly/compute-sdk-go
+      go:
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 7
+      exclude:
+        - github.com/fastly/compute-sdk-go
