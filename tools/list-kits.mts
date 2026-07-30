@@ -12,8 +12,10 @@ function getChangedKits(): Kit[] {
   const seen = new Map();
   for (const f of files) {
     const m = f.match(/^starter-kits\/([^/]+)\/([^/]+)\//);
+    if (!m) continue;
+
     const kitpath = m[1] + "/" + m[2];
-    if (m && existsSync(kitpath + '/fastly.toml') && !seen.has()) {
+    if (existsSync(`starter-kits/${kitpath}/fastly.toml`) && !seen.has(kitpath)) {
       seen.set(kitpath, {
         language: m[1],
         kit: m[2],
@@ -24,10 +26,10 @@ function getChangedKits(): Kit[] {
       });
     }
   }
-  return seen.values();
+  return [...seen.values()];
 }
 
-async function getAllKits(): Kit[] {
+async function getAllKits(): Promise<Kit[]> {
   const kits = [];
 
   for await (const entry of glob('starter-kits/*/*')) {
@@ -48,7 +50,7 @@ async function getAllKits(): Kit[] {
 }
 
 let kits = null;
-if (Boolean(process.env.ALL_KITS)) {
+if (process.env.ALL_KITS === 'true') {
   kits = await getAllKits();
 } else {
   kits = getChangedKits();
