@@ -67,34 +67,34 @@ jobs:
 
       - name: Test (Go)
         if: matrix.language == 'go'
-        uses: ./.github/actions/starter-kit-go
+        uses: $/.github/actions/starter-kit-go
         with:
           kit: starter-kits/${{ matrix.language }}/${{ matrix.kit }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Test (Rust)
         if: matrix.language == 'rust'
-        uses: ./.github/actions/starter-kit-rust
+        uses: $/.github/actions/starter-kit-rust
         with:
           kit: starter-kits/${{ matrix.language }}/${{ matrix.kit }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Test (JavaScript)
         if: matrix.language == 'javascript'
-        uses: ./.github/actions/starter-kit-javascript
+        uses: $/.github/actions/starter-kit-javascript
         with:
           kit: starter-kits/${{ matrix.language }}/${{ matrix.kit }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Test (C++)
         if: matrix.language == 'cpp'
-        uses: ./.github/actions/starter-kit-cpp
+        uses: $/.github/actions/starter-kit-cpp
         with:
           kit: starter-kits/${{ matrix.language }}/${{ matrix.kit }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Smoke test
         if: matrix.skip_smoke_test != true
-        uses: ./.github/actions/smoke-test
+        uses: $/.github/actions/smoke-test
         with:
           working-directory: starter-kits/${{ matrix.language }}/${{ matrix.kit }}

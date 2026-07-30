@@ -17,7 +17,7 @@ runs:
         cache-dependency-path: ${{ inputs.kit }}/package-lock.json
 
     - name: Run post-init script (if present)
-      uses: ./.github/actions/post-init
+      uses: $/.github/actions/post-init
       with:
         kit: ${{ inputs.kit }}
 
