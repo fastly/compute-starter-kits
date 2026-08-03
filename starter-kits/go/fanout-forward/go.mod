@@ -1,5 +1,5 @@
 module compute-starter-kit-go-fanout-forward
 
-go 1.21
+go 1.23.12
 
-require github.com/fastly/compute-sdk-go v1.3.3
+require github.com/fastly/compute-sdk-go v1.8.1
