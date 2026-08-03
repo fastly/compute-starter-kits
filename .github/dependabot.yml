@@ -35,7 +35,8 @@ updates:
       default-days: 7
 
   - package-ecosystem: cargo
-    directory: /starter-kits/rust/*
+    directories:
+      - /starter-kits/rust/*
     schedule:
       interval: weekly
       day: tuesday
@@ -58,7 +59,8 @@ updates:
         - log-fastly
 
   - package-ecosystem: npm
-    directory: /starter-kits/javascript/*
+    directories:
+      - /starter-kits/javascript/*
     schedule:
       interval: weekly
       day: tuesday
@@ -69,17 +71,18 @@ updates:
       fastly:
         group-by: dependency-name
         patterns:
-          - @fastly/js-compute
+          - "@fastly/js-compute"
       npm:
         patterns:
           - "*"
     cooldown:
       default-days: 7
       exclude:
-        - @fastly/js-compute
+        - "@fastly/js-compute"
 
   - package-ecosystem: gomod
-    directory: /starter-kits/go/*
+    directories:
+      - /starter-kits/go/*
     schedule:
       interval: weekly
       day: tuesday
