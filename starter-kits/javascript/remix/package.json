@@ -3,7 +3,7 @@
   "private": true,
   "sideEffects": false,
   "dependencies": {
-    "@fastly/js-compute": "^3.33.2",
+    "@fastly/js-compute": "^3.44.3",
     "@fastly/remix-server-adapter": "^4.0.0",
     "@fastly/remix-server-runtime": "^4.0.0",
     "@remix-run/css-bundle": "^2.5.1",
