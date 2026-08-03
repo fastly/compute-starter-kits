@@ -3,12 +3,12 @@
   "private": true,
   "dependencies": {
     "@fastly/js-compute": "^3.44.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
     "@fastly/cli": "^15.0.0",
-    "esbuild": "^0.25.0"
+    "esbuild": "^0.28.1"
   },
   "scripts": {
     "prebuild": "node esbuild.config.js",
