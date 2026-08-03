@@ -35,7 +35,7 @@ fn main(mut req: Request) -> Result<Response, Error> {
     let cookie_header = req.remove_header_str("cookie").unwrap_or_default();
     let cookie = cookies::parse(&cookie_header);
 
-    println!("Cookie map: {:?}", cookie);
+    println!("Cookie map keys: {:?}", cookie.keys().collect::<Vec<_>>());
 
     // Build the OAuth 2.0 redirect URL.
     let redirect_uri = match fastly_service_version.as_str() {
@@ -214,7 +214,10 @@ fn main(mut req: Request) -> Result<Response, Error> {
         })
         .unwrap();
 
-    println!("PKCE code verifier: {}", pkce.code_verifier);
+    println!(
+        "PKCE code verifier generated ({} chars)",
+        pkce.code_verifier.len()
+    );
     println!("State: {}", state);
     println!(
         "Redirecting to: {} (and setting code_verifier and state cookies)",

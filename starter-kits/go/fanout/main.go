@@ -51,7 +51,7 @@ func handleFanoutWs(w fsthttp.ResponseWriter, r *fsthttp.Request, channel string
 	w.Header().Add("Content-Type", "application/websocket-events")
 
 	// Is it an open message?
-	if bytes.Equal(reqBody[:6], []byte("OPEN\r\n")) {
+	if len(reqBody) >= 6 && bytes.Equal(reqBody[:6], []byte("OPEN\r\n")) {
 		// Subscribe it to the channel
 		respBody = append(respBody, WsSub(channel)...)
 
