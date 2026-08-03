@@ -12,12 +12,12 @@ runs:
     - name: Set up Rust cache
       # No setup-toolchain action needed: rustup ships on ubuntu-latest and auto-installs
       # whatever channel/target each kit's own rust-toolchain.toml declares.
-      uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+      uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
       with:
         workspaces: ${{ inputs.kit }}
 
     - name: Install cargo-audit
-      uses: taiki-e/install-action@43aecc8d72668fbcfe75c31400bc4f890f1c5853 # v2.83.2
+      uses: taiki-e/install-action@18b1216eba7f8039b0f8d131d5473787f0edce68 # v2.85.3
       with:
         tool: cargo-audit, wasm-opt
 
@@ -57,12 +57,12 @@ runs:
       run: RUSTFLAGS="--deny warnings" cargo build --profile release
 
     - name: Set up Fastly CLI
-      uses: fastly/compute-actions/setup@9ca64d641e165464cd4c0c988f2e549dc7d43b49 # v13
+      uses: fastly/compute-actions/setup@a25cf83ef5c19ef7d86f1eebffcd8f6c02ddc786 # v14
       with:
         token: ${{ inputs.token }}
 
     - name: Build (using CLI)
-      uses: fastly/compute-actions/build@9ca64d641e165464cd4c0c988f2e549dc7d43b49 # v13
+      uses: fastly/compute-actions/build@a25cf83ef5c19ef7d86f1eebffcd8f6c02ddc786 # v14
       with:
         project_directory: ${{ inputs.kit }}
         verbose: true
