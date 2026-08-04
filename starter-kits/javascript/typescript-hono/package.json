@@ -2,14 +2,14 @@
   "type": "module",
   "private": true,
   "dependencies": {
-    "@fastly/compute-js-context": "^0.4.2",
+    "@fastly/compute-js-context": "^0.5.6",
     "@fastly/hono-fastly-compute": "^0.3.1",
     "@fastly/js-compute": "^3.44.3",
-    "hono": "^4.12.12"
+    "hono": "^4.12.32"
   },
   "devDependencies": {
     "@fastly/cli": "^15.0.0",
-    "typescript": "^6.0.2"
+    "typescript": "^7.0.2"
   },
   "scripts": {
     "prebuild": "tsc",
