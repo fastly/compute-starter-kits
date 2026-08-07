@@ -31,7 +31,7 @@ Kit sources under `starter-kits/` are maintained directly in this repo — edit 
 ## Deployment and CI
 
 - **Deploying `edge/`** (the automatic CI path, and the manual `fastly compute publish` fallback): see the `deploy-edge` skill in `.claude/skills/deploy-edge/`. A full deploy must be preceded by a successful `publish-kv` run — the service reads from the KV store, not from `starter-kits/` directly.
-- **CI workflows** (`test-tools.yml`, `test-starter-kits.yml`, `main.yml`) and their per-language toolchain pinning: see `.github/CLAUDE.md`, which loads automatically when working under `.github/`.
+- **CI workflows** (`test-tools.yml`, `test-starter-kits.yml`, `main.yml`) and their per-language toolchain pinning, plus the **Dependabot update policy** (`dependabot.yml` — version updates capped at minor/patch, urgent fixes routed through security updates): see `.github/CLAUDE.md`, which loads automatically when working under `.github/`.
 - **Calling the Fastly KV Store REST API directly** (header names, `HEAD` support, metadata encoding, key listing): see the `fastly-kv-api` skill in `.claude/skills/fastly-kv-api/`.
 
 ## `[catalog]` table in kit `fastly.toml` files
