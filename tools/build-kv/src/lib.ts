@@ -92,7 +92,7 @@ export function run(options: RunOptions = {}): void {
   const globalKitsCatalog: GlobalManifestEntry[] = [];
 
   if (!fs.existsSync(starterKitsDir)) {
-    console.error(`Error: Ingested starter kits folder not found at ${starterKitsDir}. Run ingest script first.`);
+    console.error(`Error: starter kits folder not found at ${starterKitsDir}.`);
     process.exit(1);
   }
 

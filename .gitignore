@@ -7,19 +7,19 @@
 Thumbs.db
 ehthumbs.db
 
-# ==========================================
-# Monorepo Ingestion Tool Noise
-# ==========================================
-# Safely ignores any remaining local temporary checkout paths if an ingestion fails mid-loop
-.temp-clone-*
+# IDE / editor project settings
+.idea/
 
+# ==========================================
+# Build Tool Scratch Paths
+# ==========================================
 # Safely ignores any remaining local staging paths if a build-kv tarball packaging step fails mid-loop
 .temp-tarball-stage-*
 
 # ==========================================
 # Language Dependency & Package Directories
 # ==========================================
-# Catches node_modules at the root, inside ingest/, edge/, and deep inside starter-kits/javascript/
+# Catches node_modules at the root, inside tools/, edge/, and deep inside starter-kits/javascript/
 **/node_modules/
 
 # Python virtual environments and caches
@@ -55,3 +55,13 @@ edge/test-data/
 .env
 .env.*
 !.env.example
+
+# ==========================================
+# Internal Working Documents
+# ==========================================
+# Design notes and planning docs kept alongside the repo but never published
+.design/
+
+# Per-developer Claude Code settings, plus any backup copies
+# (shared skills under .claude/skills/ ARE tracked)
+.claude/settings.local.json*

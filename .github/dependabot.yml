@@ -1,3 +1,8 @@
+# Routine version updates are capped at minor/patch: major bumps are ignored so
+# grouped PRs stay small and mechanical. Urgent changes arrive through the
+# separate, uncapped Dependabot *security* update channel — `update-types`
+# ignore conditions apply to version updates only, never to security updates.
+# See `.github/CLAUDE.md` for the full rationale and known limitations.
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -14,13 +19,23 @@ updates:
       gha-dependencies:
         patterns:
           - "*"
+      gha-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
     cooldown:
       default-days: 7
 
   - package-ecosystem: npm
     directories:
       - edge
-      - tools
+      # `tools` matches nothing — there is no tools/package.json. The npm
+      # packages are tools/build-kv and tools/publish-kv.
+      - tools/*
     schedule:
       interval: weekly
       day: tuesday
@@ -31,6 +46,16 @@ updates:
       npm:
         patterns:
           - "*"
+      npm-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
+      # No 0.x minor caps needed here: the only 0.x dependency across edge/ and
+      # tools/* is @fastly/hono-fastly-compute, deliberately left uncapped.
     cooldown:
       default-days: 7
 
@@ -52,6 +77,34 @@ updates:
       cargo:
         patterns:
           - "*"
+      cargo-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
+      # Under Cargo's compatibility rules a 0.x minor bump (0.22 -> 0.23) is
+      # breaking, so it needs blocking explicitly — the major cap above does not
+      # catch it. `fastly` and `log-fastly` are 0.x too but are deliberately
+      # absent: `ignore` has no negation syntax, so naming the others is the only
+      # way to keep Fastly SDK minors flowing.
+      - dependency-name: "base64"
+        update-types:
+          - version-update:semver-minor
+      - dependency-name: "hex"
+        update-types:
+          - version-update:semver-minor
+      - dependency-name: "jwt-simple"
+        update-types:
+          - version-update:semver-minor
+      - dependency-name: "rand"
+        update-types:
+          - version-update:semver-minor
+      - dependency-name: "time"
+        update-types:
+          - version-update:semver-minor
     cooldown:
       default-days: 7
       exclude:
@@ -75,6 +128,26 @@ updates:
       npm:
         patterns:
           - "*"
+      npm-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
+      # 0.x packages treat a minor bump as breaking, which the major cap above
+      # does not catch. @fastly/* 0.x packages are deliberately absent so their
+      # minors keep flowing.
+      - dependency-name: "cookie"
+        update-types:
+          - version-update:semver-minor
+      - dependency-name: "esbuild"
+        update-types:
+          - version-update:semver-minor
+      - dependency-name: "process"
+        update-types:
+          - version-update:semver-minor
     cooldown:
       default-days: 7
       exclude:
@@ -97,6 +170,16 @@ updates:
       go:
         patterns:
           - "*"
+      go-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
+      # No 0.x minor caps needed here: compute-sdk-go is the only direct
+      # dependency across the Go kits, and it is 1.x.
     cooldown:
       default-days: 7
       exclude:

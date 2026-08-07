@@ -1,0 +1,29 @@
+{
+  // IDE-only. The .mts scripts here are run directly (`node tools/<name>.mts`),
+  // relying on Node's built-in type stripping -- nothing compiles them, and this
+  // file is never consulted at runtime.
+  //
+  // `erasableSyntaxOnly` is the load-bearing setting: Node strips types rather
+  // than compiling them, so it rejects enums, namespaces, and parameter
+  // properties outright. This flags them in the editor instead of at run time.
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    // These scripts have no package.json of their own, so point at the @types
+    // installed by the sibling packages. Missing entries are ignored silently,
+    // so this degrades to "no node globals" rather than erroring when those
+    // packages haven't had `npm install` run yet.
+    "typeRoots": [
+      "./build-kv/node_modules/@types",
+      "./publish-kv/node_modules/@types"
+    ]
+  },
+  "include": ["*.mts"]
+}
