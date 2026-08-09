@@ -17,7 +17,7 @@
   "dependencies": {
     "@fastly/js-compute": "^3.44.2",
     "@fastly/hono-fastly-compute": "^0.3.10",
-    "hono": "^4.12.32"
+    "hono": "^4.13.1"
   },
   "devDependencies": {
     "@types/node": "^26.1.2",
