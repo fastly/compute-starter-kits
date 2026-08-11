@@ -15,7 +15,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@fastly/js-compute": "^3.44.2",
+    "@fastly/js-compute": "^3.44.3",
     "@fastly/hono-fastly-compute": "^0.3.10",
     "hono": "^4.13.1"
   },
