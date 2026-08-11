@@ -35,7 +35,7 @@ runs:
         tinygo-version: '0.41.1'
 
     - name: Run post-init script (if present)
-      uses: ./.github/actions/post-init
+      uses: $/.github/actions/post-init
       with:
         kit: ${{ inputs.kit }}
 

@@ -18,7 +18,7 @@ runs:
         curl -fsSL https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-27/wasi-sdk-27.0-x86_64-linux.tar.gz | sudo tar -xz -C /opt/wasi-sdk --strip-components=1
 
     - name: Run post-init script (if present)
-      uses: ./.github/actions/post-init
+      uses: $/.github/actions/post-init
       with:
         kit: ${{ inputs.kit }}
 
