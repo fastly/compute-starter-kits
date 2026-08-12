@@ -1,0 +1,65 @@
+name: Test starter kit written in Python
+
+inputs:
+  kit:
+    description: Path of the starter kit
+  token:
+    description: Token used for access to the GitHub API
+
+runs:
+  using: composite
+  steps:
+    - name: Set up uv
+      # Installs uv and, with it, a managed CPython -- the kit's pyproject.toml declares
+      # its own requires-python, so no separate actions/setup-python step is needed.
+      # `uv run` (which fastly.toml's [scripts] build calls) resolves the interpreter and
+      # creates the venv on demand.
+      uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+      with:
+        enable-cache: true
+        cache-dependency-glob: ${{ inputs.kit }}/uv.lock
+
+    - name: Format
+      shell: bash
+      working-directory: ${{ inputs.kit }}
+      run: uvx ruff format --check .
+
+    - name: Lint
+      shell: bash
+      working-directory: ${{ inputs.kit }}
+      run: uvx ruff check .
+
+    - name: Run post-init script (if present)
+      uses: $/.github/actions/post-init
+      with:
+        kit: ${{ inputs.kit }}
+
+    - name: Set up Fastly CLI
+      uses: fastly/compute-actions/setup@a25cf83ef5c19ef7d86f1eebffcd8f6c02ddc786 # v14
+      with:
+        token: ${{ inputs.token }}
+
+    - name: Build starter kit
+      uses: fastly/compute-actions/build@a25cf83ef5c19ef7d86f1eebffcd8f6c02ddc786 # v14
+      with:
+        project_directory: ${{ inputs.kit }}
+        verbose: true
+
+    # ---
+    # Optional: run the kit's own test suite, if it defines one. No kit does today --
+    # this is forward-looking plumbing. Documented, accepted limitation: this can only
+    # meaningfully exercise kit code that doesn't directly depend on the Compute-runtime-
+    # only SDKs (compute-sdk-go / the Rust `fastly` crate / @fastly/js-compute /
+    # fastly-compute for Python), since those only function inside Viceroy or a
+    # WASI-capable runtime, which nothing here configures `uv run pytest` to use.
+    # ---
+    - name: Run kit-specific tests, if any are defined
+      shell: bash
+      working-directory: ${{ inputs.kit }}
+      run: |
+        if find . -path ./.venv -prune -o -name 'test_*.py' -print -o -name '*_test.py' -print | grep -q .; then
+          echo "Running pytest (native host interpreter, not the wasm build target)"
+          uv run --with pytest pytest
+        else
+          echo "No test_*.py / *_test.py files found -- nothing to run."
+        fi

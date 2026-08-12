@@ -29,6 +29,7 @@ ehthumbs.db
 **/ENV/
 **/__pycache__/
 **/*.pyc
+**/.ruff_cache/
 
 # ==========================================
 # Build Artifacts & Compiled Binaries

@@ -1,0 +1,16 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.venv/
+env/
+venv/
+
+# Ruff/linters cache
+.ruff_cache/
+
+# Fastly Compute build artifacts
+/bin/
+/pkg/
