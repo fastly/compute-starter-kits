@@ -32,6 +32,9 @@ const ARTIFACT_DIRS = [
   'pkg',           // fastly compute build -> pkg/*.tar.gz
   '.fastly',       // fastly CLI scratch
   'build',         // cmake (cpp kits)
+  '.venv',         // uv (python kits) -- by far the largest of the three
+  '__pycache__',   // cpython bytecode
+  '.ruff_cache',   // ruff
 ];
 
 type Candidate = { path: string; kit: string };

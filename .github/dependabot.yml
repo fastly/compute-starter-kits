@@ -153,6 +153,39 @@ updates:
       exclude:
         - "@fastly/js-compute"
 
+  - package-ecosystem: uv
+    directories:
+      - /starter-kits/python/*
+    schedule:
+      interval: weekly
+      day: tuesday
+    labels:
+      - dependencies
+      - skip-changelog
+    groups:
+      fastly:
+        group-by: dependency-name
+        patterns:
+          - fastly-compute
+      uv:
+        patterns:
+          - "*"
+      uv-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
+      # fastly-compute is 0.x and deliberately absent from any 0.x minor cap, so
+      # its minors keep flowing — same treatment as the other Fastly SDKs. flask
+      # is 3.x, so the major cap above already covers it.
+    cooldown:
+      default-days: 7
+      exclude:
+        - fastly-compute
+
   - package-ecosystem: gomod
     directories:
       - /starter-kits/go/*

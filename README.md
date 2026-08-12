@@ -9,6 +9,7 @@ Monorepo containing starter kits for the Fastly Compute platform.
 - `starter-kits/cpp/`
 - `starter-kits/go/`
 - `starter-kits/javascript/`
+- `starter-kits/python/`
 - `starter-kits/rust/`
 
 Each `starter-kits/<language>/<kit-name>/` directory is a self-contained Compute project (its own `fastly.toml`, `README.md`, and source) that you can deploy as-is or use as a starting point for your own project.
@@ -50,7 +51,7 @@ This section is for people working on the monorepo's tooling itself, not just us
 
 The `.mts` files directly under `tools/` are standalone — they have no dependencies and no `package.json`, so they run straight from a checkout with no install step. Node executes them directly using its built-in type stripping. (`tools/tsconfig.json` exists only so editors understand them; nothing consults it at runtime.)
 
-`tools/clean-kits.mts` — removes build artifacts (`target/`, `node_modules/`, `bin/`, `pkg/`, `.fastly/`, `build/`) from every kit. Rust and JavaScript kits in particular can accumulate over a gigabyte after a few local builds.
+`tools/clean-kits.mts` — removes build artifacts (`target/`, `node_modules/`, `bin/`, `pkg/`, `.fastly/`, `build/`, `.venv/`, `__pycache__/`, `.ruff_cache/`) from every kit. Rust, JavaScript, and Python kits in particular can accumulate over a gigabyte after a few local builds.
 
 ```bash
 node tools/clean-kits.mts              # clean every kit

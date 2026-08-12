@@ -86,6 +86,13 @@ jobs:
           kit: starter-kits/${{ matrix.language }}/${{ matrix.kit }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Test (Python)
+        if: matrix.language == 'python'
+        uses: $/.github/actions/starter-kit-python
+        with:
+          kit: starter-kits/${{ matrix.language }}/${{ matrix.kit }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Test (C++)
         if: matrix.language == 'cpp'
         uses: $/.github/actions/starter-kit-cpp

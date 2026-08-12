@@ -189,7 +189,7 @@ export function run(options: RunOptions = {}): void {
       fs.rmSync(path.join(tempStagePath, '.github'), { recursive: true, force: true });
 
       // 2. Strip ecosystem lockfiles entirely out of distributed user archive path
-      const lockfilesToOmit = ['package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'Cargo.lock', 'go.sum'];
+      const lockfilesToOmit = ['package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'Cargo.lock', 'go.sum', 'uv.lock'];
       lockfilesToOmit.forEach(file => {
         const p = path.join(tempStagePath, file);
         if (fs.existsSync(p)) fs.rmSync(p, { force: true });

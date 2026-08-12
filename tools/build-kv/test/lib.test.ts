@@ -86,7 +86,15 @@ describe('run()', () => {
       '[scripts]',
       'build = "go build -o bin/main.wasm ."'
     ].join('\n'), {
+      // Every ecosystem's lockfile must be stripped from the shipped tarball, so a
+      // customer's first build re-resolves current dependency versions. Listed
+      // together here (rather than one per language kit) to keep the omit list honest.
       'go.sum': 'should-be-stripped',
+      'package-lock.json': 'should-be-stripped',
+      'yarn.lock': 'should-be-stripped',
+      'pnpm-lock.yaml': 'should-be-stripped',
+      'Cargo.lock': 'should-be-stripped',
+      'uv.lock': 'should-be-stripped',
       'README.md': '# With Catalog\n',
       '.fastlyignore': '/bin\n/pkg\n'
     });
@@ -149,7 +157,9 @@ describe('run()', () => {
     // Tarball: [catalog] and lockfiles stripped, everything else intact
     const tarballPath = path.join(edgeAppDir, mockIndex['tarball:go:with-catalog'].file);
     const listing = execSync(`tar -tzf "${tarballPath}"`, { encoding: 'utf8' });
-    expect(listing).not.toContain('go.sum');
+    for (const lockfile of ['go.sum', 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'Cargo.lock', 'uv.lock']) {
+      expect(listing).not.toContain(lockfile);
+    }
 
     const shippedToml = execSync(`tar -xzOf "${tarballPath}" ./fastly.toml`, { encoding: 'utf8' });
     expect(shippedToml).not.toContain('[catalog]');
