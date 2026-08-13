@@ -4,10 +4,10 @@
   "dependencies": {
     "@fastly/hono-fastly-compute": "^0.3.1",
     "@fastly/js-compute": "^3.44.3",
-    "hono": "^4.12.32"
+    "hono": "^4.13.0"
   },
   "devDependencies": {
-    "@fastly/cli": "^16.0.0",
+    "@fastly/cli": "^15.5.0",
     "typescript": "^6.0.2"
   },
   "scripts": {
