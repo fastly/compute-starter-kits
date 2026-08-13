@@ -7,7 +7,7 @@
     "hono": "^4.12.32"
   },
   "devDependencies": {
-    "@fastly/cli": "^15.0.0",
+    "@fastly/cli": "^16.0.0",
     "typescript": "^6.0.2"
   },
   "scripts": {
