@@ -13,7 +13,7 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@fastly/cli": "^16.0.0",
+    "@fastly/cli": "^15.6.0",
     "@fastly/compute-js-static-publish": "^6.0.0",
     "@remix-run/dev": "^2.5.1",
     "@remix-run/eslint-config": "^2.5.1",
