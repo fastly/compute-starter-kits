@@ -34,15 +34,15 @@ wheels = [
 
 [[package]]
 name = "fastly-compute"
-version = "0.1.2"
+version = "0.1.3"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/7f/42/a8888d6d2b29cd97efe921a07b4c73f101692bcb5f881caa216717c0328a/fastly_compute-0.1.2.tar.gz", hash = "sha256:0e0bc8dc04a74ff194332d11700776b2d9dfad2ec037871e899654c69d52d019", size = 114101, upload-time = "2026-06-03T20:23:12.934Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e6/6f/45555c261f85199e8ac6ad7b71d20af975be51cae4c9bb446b11a50b3cac/fastly_compute-0.1.3.tar.gz", hash = "sha256:3b30b41da695d2c1e6870693b113d2f8d3732800b09f10fe0959f3af474dea55", size = 116290, upload-time = "2026-08-14T18:31:17.452Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2f/07/2cc9d207d4a77c6fdccaa6db66a24a71d6fb5450c253a890c46cc45efcf0/fastly_compute-0.1.2-cp312-abi3-macosx_10_15_x86_64.whl", hash = "sha256:2a90f472d18f73bb20e548716f8d07dcee1b88bb9359b1a810d00aece687c71e", size = 17910850, upload-time = "2026-06-03T20:23:01.029Z" },
-    { url = "https://files.pythonhosted.org/packages/7f/1c/d90fd8095f145475d17b2173a2efae8edfb11dfc0cec26ccbe89999099e9/fastly_compute-0.1.2-cp312-abi3-macosx_11_0_arm64.whl", hash = "sha256:260b89ddbae751acb9a235d6c62cafdd61c03a482a1312b21e44c7c746631cb4", size = 17029539, upload-time = "2026-06-03T20:23:03.354Z" },
-    { url = "https://files.pythonhosted.org/packages/62/40/cc864be3c5c87c0fceeaf2c13943bc9b806e5a7dcaf14f4eb7e75b453fc7/fastly_compute-0.1.2-cp312-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:526b81667ef4daa2ab63fd6852e208b8228074a938eb34b2466492788e572359", size = 18258100, upload-time = "2026-06-03T20:23:05.726Z" },
-    { url = "https://files.pythonhosted.org/packages/67/5c/d181e4aae7c77b6497df736d161c5759b29b2c5264fed27438663249d1de/fastly_compute-0.1.2-cp312-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:54d961dcec75c7d5b3617cf76b82d9a1b7658695c390edb76870a6cb5c738539", size = 18709208, upload-time = "2026-06-03T20:23:08.207Z" },
-    { url = "https://files.pythonhosted.org/packages/f7/77/0b75c814fec3b32d022497283af909709e3477fdcc257e2d9784d0bf4de1/fastly_compute-0.1.2-cp312-abi3-win_amd64.whl", hash = "sha256:5e0cb6ecdb2b84b0936946e232a131851134ba7892e6ba796a296ec0d2aafff6", size = 16308551, upload-time = "2026-06-03T20:23:10.59Z" },
+    { url = "https://files.pythonhosted.org/packages/a0/ae/d63cf79244113963d6720c033e307704ccae838cb7d14b47281168d3ab02/fastly_compute-0.1.3-cp312-abi3-macosx_10_15_x86_64.whl", hash = "sha256:a465595168ccf338b22454a1b1c2552ddf4111fece752fe5a04ffd22ccd8231d", size = 17966530, upload-time = "2026-08-14T18:31:06.282Z" },
+    { url = "https://files.pythonhosted.org/packages/dc/88/2bec4aca84b25d8d5dfbe34a468349fa6869588ad5964341dd9f81cc4121/fastly_compute-0.1.3-cp312-abi3-macosx_11_0_arm64.whl", hash = "sha256:f43fc2f54ee9c0a0aabe98e883b267d9f480cd2842c470d0475dd1cece14a72e", size = 17089682, upload-time = "2026-08-14T18:31:08.524Z" },
+    { url = "https://files.pythonhosted.org/packages/c1/7b/23439fd72a56bc2e697d19404af5f9097aa43df33e4bc5a447474aa5f9c8/fastly_compute-0.1.3-cp312-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:71887b90dc6edcd055e0b1c3e982ed22983b7977657da8fa8aad44c6f552ab71", size = 18329851, upload-time = "2026-08-14T18:31:11.167Z" },
+    { url = "https://files.pythonhosted.org/packages/53/61/99d1f3432a0cfa50371674d3837f3bf77f096d0f996c189247fb962240b8/fastly_compute-0.1.3-cp312-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:bd66ec8b56b3f90bd96e1c2604c3dba619329384e5213ec9058af2dd428b27fb", size = 18743740, upload-time = "2026-08-14T18:31:13.252Z" },
+    { url = "https://files.pythonhosted.org/packages/26/38/77fc347040778911fca54776c1e304971043a390fe622bed105554303a01/fastly_compute-0.1.3-cp312-abi3-win_amd64.whl", hash = "sha256:44e25fdc6671c9d232c45c1141a2e9df8fd7220f4fffa5dabd1b2347780b6ebb", size = 16348284, upload-time = "2026-08-14T18:31:15.572Z" },
 ]
 
 [[package]]
@@ -56,7 +56,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "fastly-compute", specifier = ">=0.1.2" },
+    { name = "fastly-compute", specifier = ">=0.1.3" },
     { name = "flask", specifier = ">=3.1.3" },
 ]
 
