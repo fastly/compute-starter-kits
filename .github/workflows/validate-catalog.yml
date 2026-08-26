@@ -1,0 +1,55 @@
+name: Validate catalog identities
+
+# Guards the two public identity axes of the starter kit catalog:
+#   - kit directory names, which are the `<kit>` in the KV keys and the `:name` in the edge
+#     app's /kits/:lang/:name routes;
+#   - docs slugs, which are the URL segment at /documentation/solutions/starters/<slug>/.
+#
+# This is meant to be a *required* status check. It is the only thing standing between a rename
+# (or a removal) and a silently broken public URL: build-kv re-runs the collision half of these
+# rules at publish time, but that happens on push to main, i.e. after merge, which is too late.
+#
+# Always validates every kit rather than only the ones the PR touched -- ambiguity is a global
+# property, so a PR editing kit A can be invalidated by an unrelated kit B.
+#
+# Stays on plain `pull_request` (never `pull_request_target`): it only parses TOML and runs no
+# kit code, but it does read untrusted fork branches, so it gets no secrets and no write scope.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # The continuity check reads the catalog out of the PR's base commit, so that commit
+          # has to actually be in the local history. The default shallow fetch does not include
+          # it, and an empty comparison set would read as "nothing was removed" -- the validator
+          # errors rather than passing in that case, so this would fail the job, not skip it.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: tools/build-kv/package-lock.json
+
+      - name: Install dependencies
+        working-directory: tools/build-kv
+        run: npm ci
+
+      - name: Validate catalog identities
+        working-directory: tools/build-kv
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.sha }}
+        run: npm run validate

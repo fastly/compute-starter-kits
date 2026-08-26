@@ -9,6 +9,7 @@
   },
   "scripts": {
     "start": "tsc --noEmit && node src/index.ts",
+    "validate": "node src/validate.ts",
     "test": "vitest run"
   },
   "dependencies": {

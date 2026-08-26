@@ -34,7 +34,10 @@ async function getAllKits(): Promise<Kit[]> {
 
   for await (const entry of glob('starter-kits/*/*')) {
     const m = entry.match(/^starter-kits\/([^/]+)\/([^/]+)/);
-    if (m) {
+    // Same fastly.toml guard as getChangedKits: a directory without one is not a buildable kit.
+    // Retired kits keep their directory (holding only a retired.toml) to reserve their name and
+    // slug, so without this they land in the matrix and fail with nothing to build.
+    if (m && existsSync(`starter-kits/${m[1]}/${m[2]}/fastly.toml`)) {
       kits.push({
 	language: m[1],
 	kit: m[2],
