@@ -66,6 +66,14 @@ describe('run()', () => {
     }
   }
 
+  // Staging copies what git tracks, so the fixtures have to be a real git work tree with a
+  // populated index for these tests to exercise the same path the repo does. No commit is
+  // needed -- `git ls-files` reads the index, not HEAD.
+  function trackAll(starterKitsDir: string) {
+    execSync('git init -q', { cwd: starterKitsDir });
+    execSync('git add -A', { cwd: starterKitsDir });
+  }
+
   it('builds a manifest + readme + tarball per kit, applying [catalog] defaults and overrides', () => {
     const starterKitsDir = makeTmpDir('starter-kits-');
     const edgeAppDir = makeTmpDir('edge-');
@@ -86,15 +94,15 @@ describe('run()', () => {
       '[scripts]',
       'build = "go build -o bin/main.wasm ."'
     ].join('\n'), {
-      // Every ecosystem's lockfile must be stripped from the shipped tarball, so a
-      // customer's first build re-resolves current dependency versions. Listed
-      // together here (rather than one per language kit) to keep the omit list honest.
-      'go.sum': 'should-be-stripped',
-      'package-lock.json': 'should-be-stripped',
-      'yarn.lock': 'should-be-stripped',
-      'pnpm-lock.yaml': 'should-be-stripped',
-      'Cargo.lock': 'should-be-stripped',
-      'uv.lock': 'should-be-stripped',
+      // Every ecosystem's lockfile ships with the kit, so a customer's first build
+      // resolves the same dependency versions this repo tests against. Listed together
+      // here (rather than one per language kit) to keep the expectation honest.
+      'go.sum': 'should-ship',
+      'package-lock.json': 'should-ship',
+      'yarn.lock': 'should-ship',
+      'pnpm-lock.yaml': 'should-ship',
+      'Cargo.lock': 'should-ship',
+      'uv.lock': 'should-ship',
       'README.md': '# With Catalog\n',
       '.fastlyignore': '/bin\n/pkg\n'
     });
@@ -111,6 +119,7 @@ describe('run()', () => {
       'build = "go build -o bin/main.wasm ."'
     ].join('\n'));
 
+    trackAll(starterKitsDir);
     run({ starterKitsDir, edgeAppDir, tempStageDir });
 
     const mockIndexFile = path.join(edgeAppDir, 'test-data', 'kv_store_mock.json');
@@ -154,20 +163,20 @@ describe('run()', () => {
     const noCatalogReadmePath = path.join(edgeAppDir, mockIndex['readme:go:no-catalog'].file);
     expect(fs.readFileSync(noCatalogReadmePath, 'utf8')).toBe('# No Catalog\n\ndesc2');
 
-    // Tarball: [catalog] and lockfiles stripped, everything else intact
+    // Tarball: [catalog] stripped, everything else intact -- lockfiles included
     const tarballPath = path.join(edgeAppDir, mockIndex['tarball:go:with-catalog'].file);
     const listing = execSync(`tar -tzf "${tarballPath}"`, { encoding: 'utf8' });
     for (const lockfile of ['go.sum', 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'Cargo.lock', 'uv.lock']) {
-      expect(listing).not.toContain(lockfile);
+      expect(listing).toContain(lockfile);
     }
 
     const shippedToml = execSync(`tar -xzOf "${tarballPath}" ./fastly.toml`, { encoding: 'utf8' });
     expect(shippedToml).not.toContain('[catalog]');
     expect(shippedToml).toContain('name = "With Catalog"');
 
-    // Dotfiles (.fastlyignore, .cargo/, etc.) must survive into the shipped tarball --
-    // a plain `cp -R dir/*` glob silently drops them, which is exactly the bug that
-    // dropped every kit's .fastlyignore (and Rust kits' .cargo/config.toml) in practice.
+    // Tracked dotfiles (.fastlyignore, .cargo/, etc.) must survive into the shipped
+    // tarball -- a plain `cp -R dir/*` glob silently drops them, which is exactly the bug
+    // that dropped every kit's .fastlyignore (and Rust kits' .cargo/config.toml) in practice.
     expect(listing).toContain('./.fastlyignore');
     const shippedFastlyignore = execSync(`tar -xzOf "${tarballPath}" ./.fastlyignore`, { encoding: 'utf8' });
     expect(shippedFastlyignore).toBe('/bin\n/pkg\n');
@@ -188,6 +197,7 @@ describe('run()', () => {
       'build = "cargo build --profile release"'
     ].join('\n'), { 'main.rs': 'fn main() {}' });
 
+    trackAll(starterKitsDir);
     run({ starterKitsDir, edgeAppDir, tempStageDir });
     const mockIndexFile = path.join(edgeAppDir, 'test-data', 'kv_store_mock.json');
     const tarballRelPath = JSON.parse(fs.readFileSync(mockIndexFile, 'utf8'))['tarball:rust:default'].file;
@@ -219,6 +229,7 @@ describe('run()', () => {
       'screenshot.png': 'fake-png-bytes'
     });
 
+    trackAll(starterKitsDir);
     run({ starterKitsDir, edgeAppDir, tempStageDir });
 
     const mockIndexFile = path.join(edgeAppDir, 'test-data', 'kv_store_mock.json');
@@ -233,6 +244,111 @@ describe('run()', () => {
     const manifest = JSON.parse(mockIndex.manifest);
     const kit = manifest.kits.find((k: any) => k.id === 'javascript-queue');
     expect(kit.catalog.files).toEqual([{ filename: 'screenshot.png', content_type: 'image/png' }]);
+  });
+
+  it('keeps untracked working-tree files out of the shipped tarball', () => {
+    const starterKitsDir = makeTmpDir('starter-kits-');
+    const edgeAppDir = makeTmpDir('edge-');
+    const tempStageDir = makeTmpDir('stage-');
+
+    writeKit(starterKitsDir, 'javascript', 'oauth', [
+      'name = "OAuth"',
+      'description = "desc"',
+      '[scripts]',
+      'build = "npm run build"'
+    ].join('\n'), { 'index.js': 'export default 1;\n' });
+
+    // Track the real sources only, then dirty the working tree the way a maintainer's
+    // checkout gets dirtied by local development.
+    trackAll(starterKitsDir);
+
+    const kitDir = path.join(starterKitsDir, 'javascript', 'oauth');
+    fs.mkdirSync(path.join(kitDir, 'node_modules', 'left-pad'), { recursive: true });
+    fs.writeFileSync(path.join(kitDir, 'node_modules', 'left-pad', 'index.js'), 'module.exports = 1;');
+    fs.mkdirSync(path.join(kitDir, 'bin'), { recursive: true });
+    fs.writeFileSync(path.join(kitDir, 'bin', 'main.wasm'), 'compiled-artifact');
+    // The sharp case: the OAuth kits read local dev secrets out of `.secret.*` files, and
+    // this tarball is served publicly from /kits/:lang/:name/tarball.
+    fs.writeFileSync(path.join(kitDir, '.secret.client_secret'), 'REAL-IDP-CLIENT-SECRET');
+
+    run({ starterKitsDir, edgeAppDir, tempStageDir });
+
+    const mockIndex = JSON.parse(fs.readFileSync(path.join(edgeAppDir, 'test-data', 'kv_store_mock.json'), 'utf8'));
+    const tarballPath = path.join(edgeAppDir, mockIndex['tarball:javascript:oauth'].file);
+    const listing = execSync(`tar -tzf "${tarballPath}"`, { encoding: 'utf8' });
+
+    expect(listing).toContain('./index.js');
+    expect(listing).toContain('./fastly.toml');
+    expect(listing).not.toContain('node_modules');
+    expect(listing).not.toContain('main.wasm');
+    expect(listing).not.toContain('.secret');
+  });
+
+  it('warns about untracked files it omitted, so a forgotten `git add` is not silent', () => {
+    const starterKitsDir = makeTmpDir('starter-kits-');
+    const edgeAppDir = makeTmpDir('edge-');
+    const tempStageDir = makeTmpDir('stage-');
+
+    writeKit(starterKitsDir, 'javascript', 'default', [
+      'name = "Default"',
+      'description = "desc"',
+      '[scripts]',
+      'build = "npm run build"'
+    ].join('\n'), { 'index.js': 'export default 1;\n' });
+
+    trackAll(starterKitsDir);
+
+    const kitDir = path.join(starterKitsDir, 'javascript', 'default');
+    // A real source file the author forgot to add -- this used to ship under `cp -R`.
+    fs.writeFileSync(path.join(kitDir, 'helper.js'), 'export const help = 1;\n');
+    // ...whereas ignored build output must NOT produce warning noise.
+    fs.writeFileSync(path.join(kitDir, '.gitignore'), 'ignored-output.txt\n');
+    fs.writeFileSync(path.join(kitDir, 'ignored-output.txt'), 'junk');
+    execSync('git add .gitignore', { cwd: kitDir });
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    run({ starterKitsDir, edgeAppDir, tempStageDir });
+    const warnings = warnSpy.mock.calls.map(args => String(args[0])).join('\n');
+    warnSpy.mockRestore();
+
+    expect(warnings).toContain('helper.js');
+    expect(warnings).toContain('not tracked by git');
+    expect(warnings).not.toContain('ignored-output.txt');
+
+    const mockIndex = JSON.parse(fs.readFileSync(path.join(edgeAppDir, 'test-data', 'kv_store_mock.json'), 'utf8'));
+    const tarballPath = path.join(edgeAppDir, mockIndex['tarball:javascript:default'].file);
+    const listing = execSync(`tar -tzf "${tarballPath}"`, { encoding: 'utf8' });
+    expect(listing).not.toContain('helper.js');
+    expect(listing).not.toContain('ignored-output.txt');
+  });
+
+  it('falls back to copying everything, with a warning, when the kit is not in a git work tree', () => {
+    const starterKitsDir = makeTmpDir('starter-kits-');
+    const edgeAppDir = makeTmpDir('edge-');
+    const tempStageDir = makeTmpDir('stage-');
+
+    // Deliberately no trackAll() -- nothing is tracked, so staging cannot use git's index.
+    writeKit(starterKitsDir, 'go', 'default', [
+      'name = "Go Default"',
+      'description = "desc"',
+      '[scripts]',
+      'build = "go build -o bin/main.wasm ."'
+    ].join('\n'), { 'main.go': 'package main\n' });
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    run({ starterKitsDir, edgeAppDir, tempStageDir });
+    const warnings = warnSpy.mock.calls.map(args => String(args[0])).join('\n');
+    warnSpy.mockRestore();
+
+    expect(warnings).toContain('no git-tracked files');
+
+    const mockIndex = JSON.parse(fs.readFileSync(path.join(edgeAppDir, 'test-data', 'kv_store_mock.json'), 'utf8'));
+    const tarballPath = path.join(edgeAppDir, mockIndex['tarball:go:default'].file);
+    const listing = execSync(`tar -tzf "${tarballPath}"`, { encoding: 'utf8' });
+
+    // Degraded but not broken: the kit still ships, rather than shipping an empty tarball.
+    expect(listing).toContain('./main.go');
+    expect(listing).toContain('./fastly.toml');
   });
 
   it('fails loudly when a declared [[catalog.files]] asset does not exist on disk', () => {
