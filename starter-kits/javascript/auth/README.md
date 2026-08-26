@@ -4,7 +4,7 @@ Connect to an identity provider such as Okta using OAuth 2.0 and validate authen
 
 **For more starter kits for Compute, head over to the [Fastly Documentation Hub](https://www.fastly.com/documentation/solutions/starters)**
 
-> This starter kit has an [equivalent Rust implementation](https://github.com/fastly/compute-rust-auth) 🦀
+> This starter kit has an [equivalent Rust implementation](https://github.com/fastly/compute-starter-kits/tree/main/starter-kits/rust/auth) 🦀
 
 ## Authentication at the network's edge, using OAuth 2.0, OpenID Connect, and Fastly Compute
 
@@ -18,15 +18,14 @@ Scroll down to view [the flow in more detail](#the-flow-in-detail).
 
 ## Getting started
 
-After you have checked out the code from this repository, you'll need to do some configuration before you can deploy it, so that Fastly knows which identity provider to use and how to authenticate.
+After you have installed the starter kit, you'll need to do some configuration before you can deploy it, so that Fastly knows which identity provider to use and how to authenticate.
 
-> Make sure you have installend and configured the [Fastly CLI](https://www.fastly.com/documentation/reference/tools/cli) first.
+> Make sure you have installed and configured the [Fastly CLI](https://www.fastly.com/documentation/reference/tools/cli) first.
 
 ### Quick start
 
 1. Obtain a client ID and optional client secret from your chosen OAuth 2.0 Identity Provider (IdP).
-1. Create an `.env` file and set the `CLIENT_ID`, `CLIENT_SECRET`, and a random `NONCE_SECRET` [environment variables](#option-a-using-environment-variables).
-1. Run `fastly compute publish` and follow the interactive configuration prompts to set up a new Fastly Compute service. 
+1. Run `fastly compute publish` and follow the interactive configuration prompts to set up a new Fastly Compute service. You'll be prompted for your [configuration secrets](#configuration-secrets) and [configuration data](#configuration-data) along the way.
 1. Add `https://{your-fastly-compute-domain}/callback` to the list of allowed callback URLs in your IdP's app configuration.
 
 ### Configuration
@@ -38,7 +37,7 @@ Accepting the default values for all other prompts will set up [Google](https://
 ```term
 Create new service: [y/N] y
 
-Service name: [compute-js-auth] 
+Service name: [my-oauth-app] 
 
 ✓ Creating service
 
@@ -55,7 +54,7 @@ You will be prompted to set up two backends:
 * `origin`: Your application or content server.
 
 #### Configuration data
-Configuration data lives in Fastly [Config Store](https://www.fastly.com/documentation/guides/concepts/edge-state/dynamic-config/#config-stores) named `compute_js_auth_config`, with the following keys:
+Configuration data lives in Fastly [Config Store](https://www.fastly.com/documentation/guides/concepts/edge-state/dynamic-config/#config-stores) named `oauth_config`, with the following keys:
 * `openid_configuration`: The OpenID Configuration (OIDC) metadata from your authorization server, JSON-serialized;
 * `jwks`: JWKS metadata from your authorization server (obtained from the `jwks_uri` property of the OIDC metadata), JSON-serialized.
 
@@ -63,24 +62,16 @@ Configuration data lives in Fastly [Config Store](https://www.fastly.com/documen
 
 #### Configuration secrets
 
-##### Option A: Using environment variables
+Configuration secrets live in a Fastly [Secret Store](https://www.fastly.com/documentation/guides/concepts/edge-state/dynamic-config/#secret-stores) named `oauth_secrets`, with the following keys:
+* `client_id`: The OAuth 2.0 client ID (determined by the Identity Provider (IdP)).
+* `client_secret`: The OAuth 2.0 client secret (if required by the IdP).
+* `nonce_secret`: A secret to verify the OpenID nonce used to mitigate replay attacks. It must be sufficiently random to not be guessable.
 
-Create an `.env` file ([example contents here](https://github.com/fastly/compute-js-auth/blob/main/.env.example)) and set the following environment variables:
-* `CLIENT_ID`: The OAuth 2.0 client ID (determined by the Identity Provider (IdP)).
-* `CLIENT_SECRET`: The OAuth 2.0 client secret (if required by the IdP).
-* `NONCE_SECRET`: A secret to verify the OpenID nonce used to mitigate replay attacks. It must be sufficiently random to not be guessable.
+`fastly compute publish` creates the store and prompts you for each of these values, as declared under `[setup.secret_stores]` in `fastly.toml`.
 
 > 💡 Run `dd if=/dev/random bs=32 count=1 | base64` to generate a random, non-guessable secret.
 
-##### Option B: Using a Fastly Secret Store (beta)
-
-Store configuration secrets in a Fastly [Secret Store](https://www.fastly.com/documentation/guides/concepts/edge-state/dynamic-config/#secret-stores) named `compute_js_auth_secrets`, with the keys `client_id`, `client_secret`, and `nonce_secret` respectively.
-
-You must set the `USE_SECRET_STORE` constant to `true` in [src/config.js](https://github.com/fastly/compute-js-auth/blob/main/src/config.js)
-
-> ⚠️ For this to work, Secret Stores must be enabled on your Fastly account. Secret Stores is a paid feature in Fastly Compute. Contact [Fastly Support](https://support.fastly.com) to opt in to the [beta](https://docs.fastly.com/products/fastly-product-lifecycle#beta).
-
-> 💡 To simplify local development and initial deployment, you may add the `[local_server.secret_stores]` and `[setup.secret_stores]` sections in your [fastly.toml](https://github.com/fastly/compute-js-auth/blob/main/fastly.toml) file. Check out [fastly.secretstore.example.toml](https://github.com/fastly/compute-js-auth/blob/main/fastly.secretstore.example.toml).
+For [local development](#local-development), the same three values are read from files in the root of your project, as declared under `[local_server.secret_stores]` in `fastly.toml`: `.secret.client_id`, `.secret.client_secret`, and `.secret.nonce_secret`. These files are gitignored, and excluded from the published package by `.fastlyignore`.
 
 ## Using an OAuth 2.0 Identity Provider with Fastly Compute
 
@@ -88,7 +79,7 @@ You must set the `USE_SECRET_STORE` constant to `true` in [src/config.js](https:
 
 You might operate your own identity service, but any [OAuth 2.0, OpenID Connect (OIDC) conformant identity provider](https://en.wikipedia.org/wiki/List_of_OAuth_providers) will work.  You will need the following from your IdP:
 
-* A *Client ID*, and optionally, a *Client secret* ➡️ Set the `CLIENT_ID` and `CLIENT_SECRET` environment variables, or set the `client_id` and `client_secret` keys in the [Secret Store](https://www.fastly.com/documentation/guides/concepts/edge-state/dynamic-config/#secret-stores).
+* A *Client ID*, and optionally, a *Client secret* ➡️ Set the `client_id` and `client_secret` keys in the [Secret Store](https://www.fastly.com/documentation/guides/concepts/edge-state/dynamic-config/#secret-stores).
 * An *OpenID Connect Discovery document* ➡️ Set the `openid_configuration` key (JSON-serialized string value) in the [Config Store](https://www.fastly.com/documentation/guides/concepts/edge-state/dynamic-config/#config-stores).
 * A *JSON Web key set* ➡️  Set the `jwks` key (JSON-serialized string value) in the [Config Store](https://www.fastly.com/documentation/guides/concepts/edge-state/dynamic-config/#config-stores).
 * The hostname of the IdP's *authorization server* ➡️ Create as a backend called `idp` on your Fastly service
@@ -116,7 +107,10 @@ As an example, if you are using [Google](https://developers.google.com/identity/
 1. In the [Google API Console](https://console.developers.google.com/), use the **Credentials API** to create a [new OAuth client ID](https://console.cloud.google.com/apis/credentials/oauthclient). Choose **Web application** as your application type, give your app a name, and finally make note of the following two outputs:
    - The *Client ID* (eg. `RANDOM_LONG_ID.apps.googleusercontent.com`) is shown next to your application name.
    - The *Client SECRET* (eg. `RANDOM_LONG_SECRET`) is shown next to your application name.
-1. Create an `.env` ([example](https://github.com/fastly/compute-js-auth/blob/main/.env.example)) in your Fastly project and paste in the `CLIENT_ID` and `CLIENT_SECRET` obtained before. Set a random `NONCE_SECRET`, a long, non-guessable random string of your choice. Save the file.
+1. In the root of your Fastly project, paste the *Client ID* into `.secret.client_id` and the *Client secret* into `.secret.client_secret`. Type a long, non-guessable random string of your choice into `.secret.nonce_secret`.
+   ```sh
+   dd if=/dev/random bs=32 count=1 | base64 > .secret.nonce_secret
+   ```
 1. After you've [configured](#configuration) and deployed your new Fastly Compute service, find your new OAuth client ID in the [Google API Console](https://console.cloud.google.com/apis/credentials), and add `https://{random-funky-words}.edgecompute.app/callback` to the list of **Authorized redirect URIs** 
    > 💡 Optionally, also add `http://127.0.0.1:7676/callback` as an authorized redirect URI for local development.
 
@@ -151,13 +145,15 @@ Here is how the authentication process works:
 
 ## Local development
 
-Run `fastly compute serve --watch` (or `npm run dev`) to spin up a local development server and watch source files for changes. 
+Run `fastly compute serve --watch` (or `npm run dev`) to spin up a local development server and watch source files for changes.
+
+The local server reads your secrets from the `.secret.*` files described under [configuration secrets](#configuration-secrets), so create those before starting it.
 
 ## Issues
 
 If you encounter any bugs or unexpected behavior, please [file an issue][bug].
 
-[bug]: https://github.com/fastly/compute-js-auth/issues/new?labels=bug
+[bug]: https://github.com/fastly/compute-starter-kits/issues/new?labels=bug
 
 ### Security issues
 
