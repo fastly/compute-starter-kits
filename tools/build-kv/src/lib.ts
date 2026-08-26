@@ -71,6 +71,73 @@ export function stripTomlSection(content: string, sectionName: string): string {
   return [...lines.slice(0, range.start), ...lines.slice(range.end)].join('\n');
 }
 
+// Copies a kit's sources into `destPath`, using git's index as the allowlist of what may
+// ship. Copying the directory wholesale instead (`cp -R kit/.`) also picks up whatever
+// untracked junk happens to sit in a maintainer's working tree -- `node_modules/`, `bin/`,
+// `pkg/`, and for the OAuth kits the local `.secret.*` files, whose plaintext would then be
+// served from the public tarball endpoint. Nothing here reads `.gitignore`/`.fastlyignore`,
+// so "what git tracks" is the only allowlist available that can't silently go stale.
+//
+// Dotfiles still ship: `.fastlyignore`, `.cargo/config.toml` (which sets the Rust kits'
+// wasm32-wasip1 target, without which `cargo build` silently targets the host) and friends
+// are all tracked. Uncommitted edits to tracked files also flow through, since the bytes are
+// read from the working tree -- that's deliberate, so a kit can be previewed before commit.
+export function stageKitSources(sourceKitPath: string, destPath: string): void {
+  let tracked: string[] = [];
+  try {
+    tracked = execSync('git ls-files -z', { cwd: sourceKitPath, stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString('utf8')
+      .split('\0')
+      .filter(Boolean);
+  } catch {
+    // Not a git work tree at all (e.g. the kit sources were themselves extracted from an
+    // archive). Handled by the same fallback as the nothing-tracked-yet case below.
+  }
+
+  if (tracked.length === 0) {
+    // A brand-new kit directory that has not been `git add`ed yet lands here too. Copying
+    // nothing would ship an empty tarball, so fall back to the whole directory -- but say so,
+    // because this is exactly the path that can leak untracked files.
+    console.warn(`  WARNING: no git-tracked files under ${sourceKitPath}; copying the entire directory instead. Untracked files WILL be included in the shipped tarball.`);
+    fs.mkdirSync(destPath, { recursive: true });
+    execSync(`cp -R "${sourceKitPath}/." "${destPath}/"`);
+    return;
+  }
+
+  const missing: string[] = [];
+  for (const rel of tracked) {
+    const from = path.join(sourceKitPath, rel);
+    if (!fs.existsSync(from)) {
+      missing.push(rel);
+      continue;
+    }
+    const to = path.join(destPath, rel);
+    fs.mkdirSync(path.dirname(to), { recursive: true });
+    fs.copyFileSync(from, to);
+  }
+
+  // Tracked but absent from the working tree: usually an unstaged deletion, but a sparse
+  // checkout looks identical from here. Either way the file drops out of the tarball.
+  if (missing.length > 0) {
+    console.warn(`  WARNING: ${missing.length} file(s) tracked under ${sourceKitPath} are missing from the working tree and were omitted from the tarball: ${missing.join(', ')}`);
+  }
+
+  // The flip side of using the index as the allowlist: a file the author created but never
+  // `git add`ed silently will not ship. Ignored paths (node_modules/, bin/, .secret.*) are
+  // excluded on purpose and must stay quiet, hence --exclude-standard.
+  try {
+    const untracked = execSync('git ls-files -z --others --exclude-standard', { cwd: sourceKitPath, stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString('utf8')
+      .split('\0')
+      .filter(Boolean);
+    if (untracked.length > 0) {
+      console.warn(`  WARNING: ${untracked.length} file(s) under ${sourceKitPath} are not tracked by git and were omitted from the tarball -- \`git add\` them if they belong in the kit: ${untracked.join(', ')}`);
+    }
+  } catch {
+    // Best-effort advisory only; never fail the build over it.
+  }
+}
+
 export function run(options: RunOptions = {}): void {
   console.log('Initializing local KV generation workspace...');
 
@@ -178,31 +245,22 @@ export function run(options: RunOptions = {}): void {
       }
 
       // --- Tarball Compilation Sandbox Staging ---
-      // `sourceKitPath/.` (not `/*`) so dotfiles/dotdirs (.fastlyignore, .cargo/, etc.)
-      // actually make it into the shipped tarball -- a bare glob silently skips them.
       const tempStagePath = path.join(tempStageDir, `.temp-tarball-stage-${kitId}`);
       fs.mkdirSync(tempStagePath, { recursive: true });
-      execSync(`cp -R "${sourceKitPath}/." "${tempStagePath}/"`);
+      stageKitSources(sourceKitPath, tempStagePath);
 
       // 1. Strip .github/ out of the distributed archive -- those workflows run CI against
       // the starter kit's own upstream repo, not against a customer's scaffolded project.
       fs.rmSync(path.join(tempStagePath, '.github'), { recursive: true, force: true });
 
-      // 2. Strip ecosystem lockfiles entirely out of distributed user archive path
-      const lockfilesToOmit = ['package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'Cargo.lock', 'go.sum', 'uv.lock'];
-      lockfilesToOmit.forEach(file => {
-        const p = path.join(tempStagePath, file);
-        if (fs.existsSync(p)) fs.rmSync(p, { force: true });
-      });
-
-      // 3. Programmatically sanitize and prune the [catalog] section out of the archive's
+      // 2. Programmatically sanitize and prune the [catalog] section out of the archive's
       // fastly.toml — that metadata is only needed by services consuming the edge app
       // (edge/) and has no meaning to the customer who downloads/deploys this kit.
       const cleanToml = stripTomlSection(tomlContent, 'catalog');
       fs.writeFileSync(path.join(tempStagePath, 'fastly.toml'), cleanToml);
 
-      // 4. Compress bundle securely, deterministically. Both `tar`'s per-file mtimes
-      // (freshly set by the `cp`/`writeFileSync` steps above) and gzip's own header
+      // 3. Compress bundle securely, deterministically. Both `tar`'s per-file mtimes
+      // (freshly set by the copy/`writeFileSync` steps above) and gzip's own header
       // timestamp default to "now", which makes the archive's bytes -- and therefore
       // its content hash -- differ on every rebuild even when nothing actually changed.
       // Pinning every file's mtime and using `gzip -n` (no name/timestamp in the header)
