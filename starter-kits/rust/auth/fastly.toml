@@ -9,7 +9,10 @@ manifest_version = 3
 
 [catalog]
 topics = ["authentication"]
-slug = "compute-rust-auth"
+slug = "compute-starter-kit-rust-oauth"
+# compute-rust-auth is the URL this kit has been published under since before the
+# compute-starter-kit-* naming convention existed. It must keep resolving.
+alt_slugs = ["compute-rust-auth"]
 
 [scripts]
   build = "cargo build --profile release"
