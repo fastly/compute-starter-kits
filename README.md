@@ -34,6 +34,61 @@ curl https://compute-starter-kits.fastly.dev/kits?lang=rust
 curl https://compute-starter-kits.fastly.dev/kits/rust/default/readme
 ```
 
+## Renaming and retiring a starter kit
+
+A kit has **two independent public identities**, and both are live URLs that people and tools already point at:
+
+| | Where it appears | Must be unique |
+| --- | --- | --- |
+| **name** — the directory name | the `:name` in `/kits/:lang/:name` above, and the kit's keys in the KV store | per **language** — `javascript/auth` and `rust/auth` coexist fine |
+| **slug** | the docs page at `https://www.fastly.com/documentation/solutions/starters/<slug>/` | **globally**, across every language |
+
+Neither can simply be changed: renaming a directory breaks the catalog paths, and changing a slug moves a published documentation page. Instead, both support aliases, declared in the kit's `[catalog]` table.
+
+### Renaming
+
+Move the old value into the matching `alt_*` array **in the same PR** as the rename:
+
+```toml
+# starter-kits/javascript/oauth/fastly.toml, renamed from javascript/auth
+[catalog]
+alt_names = ["auth"]                    # was starter-kits/javascript/auth
+alt_slugs = ["compute-js-auth"]         # was .../starters/compute-js-auth/
+```
+
+The catalog service then redirects the old name to the current URL, keeping the sub-path (`/kits/javascript/auth/readme` → `/kits/javascript/oauth/readme`), and the documentation site redirects the old slug. Nothing that previously worked stops working.
+
+Note that a kit which declares no `slug` still has a documentation URL — it's derived from the language and directory name, as `compute-starter-kit-<lang>-<name>`. Renaming such a kit changes that derived URL, so it needs an `alt_slugs` entry naming the old one just the same. (One wrinkle: TypeScript kits live under `javascript/` but keep `typescript-` in their directory name, so the language isn't repeated — `javascript/typescript-hono` derives `compute-starter-kit-typescript-hono`.)
+
+### Retiring
+
+Delete the kit's sources but **keep its directory**, leaving a single `retired.toml`:
+
+```toml
+# starter-kits/javascript/webpack/retired.toml
+[catalog]
+slug = "compute-starter-kit-javascript-webpack"
+alt_names = []                                            # carry over any the kit had
+alt_slugs = []                                            # likewise
+replaced_by = "compute-starter-kit-javascript-default"     # optional: a successor's slug
+retired_on = "2026-08-27"                                  # optional
+```
+
+The directory's continued existence is what reserves the name and slug, so **never delete it** — otherwise a future kit could claim a URL that used to mean something else. Because there's no `fastly.toml`, Dependabot has no manifest to update and CI skips building it, so retiring a kit genuinely removes its maintenance burden.
+
+Carry over any `alt_names`/`alt_slugs` the kit had accumulated. They're aliases people may still be using, and they die with the kit if you drop them.
+
+Retired kits are reported separately from live ones (`retired` in `GET /kits`, rather than `kits`), and their URLs answer `410 Gone` with the successor's slug if one was given — so a client can tell "deliberately withdrawn" from "never existed".
+
+### The PR check
+
+`Validate catalog identities` runs on every PR and fails if either rule is broken:
+
+- **Ambiguity** — two kits claiming one name (within a language) or one slug (anywhere), counting aliases and derived slugs.
+- **Disappearance** — any name or slug that exists on the base branch and no longer resolves. This is what catches a rename or deletion that forgot its alias, and its message tells you which array to add the old value to.
+
+It checks every kit on every run, not just the ones you touched, because uniqueness is a property of the whole catalog.
+
 ## Development
 
 This section is for people working on the monorepo's tooling itself, not just using a kit.
