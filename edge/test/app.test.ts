@@ -182,3 +182,108 @@ describe('GET /kits/:lang/:name/tarball', () => {
     expect(res.status).toBe(404);
   });
 });
+
+// A manifest that exercises both identity mechanisms: `go/renamed` was previously published as
+// `go/oldname`, and `go/gone` has been retired.
+const ALIASED_MANIFEST = JSON.stringify({
+  generated_at: '2026-08-26T00:00:00.000Z',
+  kits: [
+    {
+      id: 'go-renamed', name: 'Renamed', path: 'starter-kits/go/renamed', language: 'go', description: '',
+      catalog: {
+        show_on_docs: true, show_on_cli: true, tags: [], topics: [], files: [], min_cli_version: '16.0.0',
+        alt_names: ['oldname'], alt_slugs: ['compute-starter-kit-go-oldname']
+      }
+    }
+  ],
+  retired: [
+    {
+      id: 'go-gone', path: 'starter-kits/go/gone', language: 'go',
+      catalog: {
+        slug: 'compute-gone', alt_names: ['ancient'], alt_slugs: [],
+        replaced_by: 'compute-starter-kit-go-renamed', retired_on: '2026-08-26'
+      }
+    }
+  ]
+});
+
+describe('renamed kits', () => {
+  const store = () => fakeKvStore({ manifest: ALIASED_MANIFEST });
+
+  it('308s a previous name to the kit\'s current URL', async () => {
+    const res = await app.request('/kits/go/oldname', {}, { kitsStorage: store() });
+    expect(res.status).toBe(308);
+    expect(res.headers.get('location')).toBe('/kits/go/renamed');
+  });
+
+  it('preserves the sub-resource when redirecting', async () => {
+    for (const [from, to] of [
+      ['/kits/go/oldname/readme', '/kits/go/renamed/readme'],
+      ['/kits/go/oldname/tarball', '/kits/go/renamed/tarball'],
+      ['/kits/go/oldname/file', '/kits/go/renamed/file'],
+      ['/kits/go/oldname/file/shot.png', '/kits/go/renamed/file/shot.png']
+    ]) {
+      const res = await app.request(from, {}, { kitsStorage: store() });
+      expect(res.status, from).toBe(308);
+      expect(res.headers.get('location'), from).toBe(to);
+    }
+  });
+
+  it('does not treat an alias from another language as a match', async () => {
+    // alt_names are per-language, matching the KV key and route shape.
+    const res = await app.request('/kits/rust/oldname', {}, { kitsStorage: store() });
+    expect(res.status).toBe(404);
+  });
+});
+
+describe('retired kits', () => {
+  const store = () => fakeKvStore({ manifest: ALIASED_MANIFEST });
+
+  it('410s with the successor slug rather than 404ing', async () => {
+    const res = await app.request('/kits/go/gone', {}, { kitsStorage: store() });
+    expect(res.status).toBe(410);
+    const body = await res.json() as any;
+    expect(body.replaced_by).toBe('compute-starter-kit-go-renamed');
+    expect(body.retired_on).toBe('2026-08-26');
+  });
+
+  it('410s on the retired kit\'s assets too', async () => {
+    for (const path of ['/kits/go/gone/readme', '/kits/go/gone/tarball', '/kits/go/gone/file']) {
+      const res = await app.request(path, {}, { kitsStorage: store() });
+      expect(res.status, path).toBe(410);
+    }
+  });
+
+  it('410s a name the retired kit was previously published under', async () => {
+    const res = await app.request('/kits/go/ancient', {}, { kitsStorage: store() });
+    expect(res.status).toBe(410);
+  });
+
+  it('lists retirements separately from live kits, so unaware consumers ignore them', async () => {
+    const res = await app.request('/kits', {}, { kitsStorage: store() });
+    const body = await res.json() as any;
+    expect(body.kits.map((k: any) => k.id)).toEqual(['go-renamed']);
+    expect(body.retired.map((r: any) => r.id)).toEqual(['go-gone']);
+  });
+
+  it('applies the lang filter to retirements', async () => {
+    const res = await app.request('/kits?lang=rust', {}, { kitsStorage: store() });
+    const body = await res.json() as any;
+    expect(body.retired).toEqual([]);
+  });
+
+  it('serves a pre-retirement manifest with no `retired` array unchanged', async () => {
+    // The deployed manifest predates this field until publish-kv next runs.
+    const res = await app.request('/kits', {}, { kitsStorage: fakeKvStore({ manifest: SAMPLE_MANIFEST }) });
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.kits).toHaveLength(3);
+    expect(body.retired).toEqual([]);
+  });
+
+  it('still 404s an unknown kit when the manifest itself is unavailable', async () => {
+    // The manifest lookup only upgrades a 404 to a 308/410; losing it must not yield a 500.
+    const res = await app.request('/kits/go/whatever/readme', {}, { kitsStorage: fakeKvStore({}) });
+    expect(res.status).toBe(404);
+  });
+});

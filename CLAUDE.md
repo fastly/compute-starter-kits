@@ -40,10 +40,43 @@ Kit sources under `starter-kits/` are maintained directly in this repo — edit 
 
 - `tags` are freeform, kit-author-defined labels. `topics` are a separate, curated cross-repo taxonomy of use-case categories (e.g. `real-time`, `static-content`, `rate-limiting`) — populated from a source list maintained outside this repo, kept distinct from `tags` because they serve a different downstream purpose. Both are plain string arrays with the same `[]` default.
 - `[[catalog.files]]` is an array of tables declaring extra named assets (e.g. a preview screenshot) that live alongside a kit's source but aren't part of the shipped tarball — each entry needs `filename` (must exist in the kit's own source dir; `build-kv` fails the build loudly if it doesn't) and `content_type`. `build-kv` copies each into its own KV-bound location (`file:<lang>:<kit>:<filename>`) rather than bundling it into the tarball or the manifest's bytes. Defaults to `[]`.
-- `slug` is an optional string, passed straight through to the manifest's `catalog.slug` unchanged when present (e.g. matching the kit's old standalone repo name, `compute-starter-kit-<name>`) — no other processing or validation. Omitted from the manifest entirely (not even `null`) when absent from a kit's `fastly.toml`, rather than defaulting to an empty string.
+- `slug` is an optional string, passed straight through to the manifest's `catalog.slug` unchanged when present (e.g. matching the kit's old standalone repo name, `compute-starter-kit-<name>`) — no other processing or validation. Omitted from the manifest entirely (not even `null`) when absent from a kit's `fastly.toml`, rather than defaulting to an empty string. **It is a live URL**, not just a label: the docs site serves each kit at `https://www.fastly.com/documentation/solutions/starters/<slug>/`, so changing one moves a public page. See "Renaming and retiring a starter kit" in `README.md` for the procedure, and "Renaming and retiring kits" below for how it is enforced.
+- `alt_names` and `alt_slugs` are string arrays (default `[]`) of identities the kit *used* to be published under and must keep answering for. `README.md` documents how to use them; "Renaming and retiring kits" below covers which axis is which and why they're checked differently.
 - Parse with `smol-toml`, never by hand — regex-based TOML parsing silently mangles multi-line arrays and inline comments.
 - Only a handful of kits have a populated `[catalog]` table — the ones with real `topics`/`files`/`slug` values. Missing fields default to `show_on_docs=true`, `show_on_cli=true`, `tags=[]`, `topics=[]`, `files=[]`, `min_cli_version='16.0.0'` (`slug` has no default — it's simply absent).
-- The compiled manifest (`build-kv`'s `GlobalManifestEntry`, `edge`'s `StarterKitEntry`) passes this table straight through under a `catalog` key (`{ show_on_docs, show_on_cli, tags, topics, files, min_cli_version }`), rather than flattening/renaming fields — no external consumer (CLI, Developer Hub, etc.) depends on a specific shape yet, so keep it this simple unless one actually needs otherwise. Note `files` here is only for listing/enumeration (`GET /kits/:lang/:name/file`) — its `content_type` is *not* what the edge app trusts when actually serving a file's bytes; see the KV-metadata note above.
+- The compiled manifest (`build-kv`'s `GlobalManifestEntry`, `edge`'s `StarterKitEntry`) passes this table straight through under a `catalog` key (`{ show_on_docs, show_on_cli, tags, topics, files, min_cli_version, alt_names, alt_slugs }`), rather than flattening/renaming fields — no external consumer (CLI, Developer Hub, etc.) depends on a specific shape yet, so keep it this simple unless one actually needs otherwise. Note `files` here is only for listing/enumeration (`GET /kits/:lang/:name/file`) — its `content_type` is *not* what the edge app trusts when actually serving a file's bytes; see the KV-metadata note above.
+
+## Renaming and retiring kits
+
+**The procedure lives in `README.md` ("Renaming and retiring a starter kit") — that's the copy
+human maintainers read, so keep it authoritative and don't duplicate it here.** In short: a kit
+has two independent identities, the directory name (per-language; the `<kit>` in the
+`readme:`/`tarball:`/`file:` KV keys and the `:name` in `/kits/:lang/:name`) and the docs slug
+(global; `https://www.fastly.com/documentation/solutions/starters/<slug>/`). Renaming either
+means carrying the old value in `alt_names`/`alt_slugs`; retiring a kit means deleting its
+sources but keeping its directory, holding only a `retired.toml`.
+
+What follows is the implementation side, which is not in `README.md`.
+
+**Both rules are enforced, by the same code, at two points.** `tools/build-kv/src/lib.ts` holds
+`collectKitIdentities`, `validateCatalogIdentities` (nothing ambiguous) and
+`validateIdentityContinuity` (nothing silently disappears — every identity on the base ref must
+still resolve, whether canonically, via an alias, or via a tombstone). `src/validate.ts` is the
+PR gate (`npm run validate`, wired up in `.github/workflows/validate-catalog.yml`, intended to be
+a *required* status check); `run()` re-checks the ambiguity half so a bad catalog can't reach the
+KV store. The PR check is the one that matters — `build-kv` only runs on push to `main`, i.e.
+after merge.
+
+The edge app `308`s a renamed kit rather than `301`: both are permanent, but `301` lets a client rewrite the request method to `GET` while `308` requires the method and body be preserved. Every route here is `GET`, so it makes no observable difference today — which is the point of using the precise code now, so it can't quietly become wrong if a non-`GET` route appears. The docs side is a *different* surface and `301` is still right there: it's an indexed HTML page, and `301` is the redirect every crawler has understood for two decades (Google treats `308` equivalently, but there's no upside to being the first to find out about the others). A retired kit gets `410 Gone` carrying `replaced_by`, not a redirect — mapping a slug back to a `<lang>/<name>` path would mean reimplementing slug construction in a second codebase.
+
+Retired kits land in the manifest's own top-level `retired` array, deliberately *not* in `kits`, so a consumer that hasn't been taught about retirement ignores them rather than listing a kit nobody can install. Note `publish-kv` will prune a newly retired kit's `readme:`/`tarball:` keys on the next run, which is correct — there are no sources left to serve. It's a couple of deletions, well inside the default `maxDeleteCount` of 10.
+
+Three things to know if you touch this:
+- **A manifest entry's `name` field is the human-readable title** out of `fastly.toml` (`"OAuth 2.0 in JavaScript"`), *not* the directory name — the directory name is only recoverable from `id` or the last segment of `path`. The edge app's `kitDirName()` exists for exactly this, and building a URL from `name` instead produces a broken redirect like `/kits/go/Renamed`. Retired entries deliberately have no `name` at all, rather than reusing the field to mean something different.
+- **Kits that declare no slug still have a docs URL**, constructed by `derivedSlug()` as `compute-starter-kit-<lang>-<name>`. Those constructed values take part in the global uniqueness check, or a newly declared `alt_slug` could silently shadow another kit's existing page. The rule is the exact inverse of the mapping that originally laid `starter-kits/<lang>/<name>` out from the standalone `compute-starter-kit-*` repo names, so it reproduces the URLs the docs site already serves — `derivedSlug()` is the only place it lives.
+  - The exception is TypeScript: those kits sit under `javascript/` but keep `typescript-` in their directory name, so the language segment is already present and must not be doubled — `javascript/typescript-hono` is `compute-starter-kit-typescript-hono`, not `...-javascript-typescript-hono`.
+  - Consequence worth knowing before you "tidy up" a `[catalog]` table: the four `typescript-*` kits declare a `slug` identical to what `derivedSlug()` produces, so those declarations are redundant (harmless, and arguably clearer left explicit). The only load-bearing declarations are `compute-js-auth` and `compute-rust-auth`, which predate the `compute-starter-kit-*` convention and therefore can't be constructed.
+- The continuity check needs the base commit in local history, hence `fetch-depth: 0` in the workflow. An empty comparison set would read as "nothing was removed", so `collectKitIdentitiesAtRef` throws rather than returning nothing — and note `git ls-tree` needs `--full-tree`, since its pathspec is otherwise relative to the current directory and silently matches nothing from inside `tools/build-kv`.
 
 ## `build-kv` stages the shipped tarball from git's index
 
