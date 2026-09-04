@@ -1,6 +1,6 @@
 {
   "engines": {
-    "node": "^18.0.0"
+    "node": ">= 20.11"
   },
   "dependencies": {
     "@fastly/js-compute": "^3.44.3",
@@ -14,9 +14,7 @@
   },
   "scripts": {
     "prebuild": "webpack",
-    "build": "npm run build-script || npm run build-cmd",
-    "build-script": "sh build.sh || true",
-    "build-cmd": "cmd.exe /c build.cmd",
+    "build": "js-compute-runtime bin/index.js bin/main.wasm",
     "deploy": "fastly compute publish",
     "serve": "fastly compute serve",
     "dev": "fastly compute serve --watch"
