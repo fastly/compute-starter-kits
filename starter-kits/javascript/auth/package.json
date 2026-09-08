@@ -3,7 +3,7 @@
     "node": ">= 20.11"
   },
   "dependencies": {
-    "@fastly/js-compute": "^3.44.3",
+    "@fastly/js-compute": "^3.45.1",
     "cookie": "^0.7.0",
     "jose": "^5.0.1",
     "pkce-challenge": "^4.0.1"
