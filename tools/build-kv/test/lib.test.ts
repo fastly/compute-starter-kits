@@ -66,13 +66,10 @@ describe('catalog identities', () => {
     expect(derivedSlug('javascript', 'default')).toBe('compute-starter-kit-javascript-default');
     expect(derivedSlug('rust', 'auth')).toBe('compute-starter-kit-rust-auth');
     expect(derivedSlug('python', 'default')).toBe('compute-starter-kit-python-default');
-    // TypeScript kits sit under javascript/ but keep `typescript-` in the directory name, so the
-    // language segment is already there and must not be doubled up. These four kits declare the
-    // same value explicitly today, so the construction has to agree with them exactly.
-    expect(derivedSlug('javascript', 'typescript-hono')).toBe('compute-starter-kit-typescript-hono');
-    expect(derivedSlug('javascript', 'typescript-kv-store')).toBe('compute-starter-kit-typescript-kv-store');
-    // The prefix is only special under javascript/, matching the layout rule it inverts.
-    expect(derivedSlug('rust', 'typescript-ish')).toBe('compute-starter-kit-rust-typescript-ish');
+    // No special cases, including for the typescript-* kits, whose URLs drop the `javascript`
+    // segment. Those four declare `slug` explicitly, which is the only exception mechanism --
+    // keeping this a single expression is what lets it stay identical to the docs site's copy.
+    expect(derivedSlug('javascript', 'typescript-hono')).toBe('compute-starter-kit-javascript-typescript-hono');
   });
 
   it('accepts the same kit name in different languages', () => {
