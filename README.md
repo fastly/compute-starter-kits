@@ -58,7 +58,7 @@ alt_slugs = ["compute-js-auth"]         # was .../starters/compute-js-auth/
 
 The catalog service then redirects the old name to the current URL, keeping the sub-path (`/kits/javascript/auth/readme` → `/kits/javascript/oauth/readme`), and the documentation site redirects the old slug. Nothing that previously worked stops working.
 
-Note that a kit which declares no `slug` still has a documentation URL — it's derived from the language and directory name, as `compute-starter-kit-<lang>-<name>`. Renaming such a kit changes that derived URL, so it needs an `alt_slugs` entry naming the old one just the same. (One wrinkle: TypeScript kits live under `javascript/` but keep `typescript-` in their directory name, so the language isn't repeated — `javascript/typescript-hono` derives `compute-starter-kit-typescript-hono`.)
+Note that a kit which declares no `slug` still has a documentation URL — it's derived from the language and directory name, as `compute-starter-kit-<lang>-<name>`. Renaming such a kit changes that derived URL, so it needs an `alt_slugs` entry naming the old one just the same. A kit whose URL doesn't follow that shape declares `slug` explicitly — the `typescript-*` kits do, which is why their URLs have no `javascript` segment.
 
 ### Retiring
 

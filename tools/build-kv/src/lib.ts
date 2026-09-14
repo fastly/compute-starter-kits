@@ -116,26 +116,15 @@ export interface KitIdentity {
   source: string;
 }
 
-// Kits that don't declare a slug still get a docs URL, constructed from their language and
-// directory name -- so those constructed values occupy the same global namespace as declared
-// ones and have to take part in collision checking. Otherwise a newly declared slug (or
-// alt_slug) could silently shadow another kit's existing docs URL.
+// Kits that don't declare a slug still get a docs URL, constructed here, so those constructed
+// values occupy the same global namespace as declared ones and take part in collision checking.
+// Must stay identical to the documentation site's own fallback (`resolveKitSlug` in
+// fastly/customer-documentation), or this guards a string nobody serves.
 //
-// This is the exact inverse of the mapping that laid `starter-kits/<lang>/<name>` out from the
-// original standalone `compute-starter-kit-*` repo names, so it reproduces the URLs the docs
-// site already serves.
-//
-// The one wrinkle is TypeScript: those kits live under `javascript/` but keep `typescript-` in
-// their directory name, so the language segment is already present and must not be repeated --
-// `javascript/typescript-hono` is `compute-starter-kit-typescript-hono`, not
-// `compute-starter-kit-javascript-typescript-hono`.
-//
-// Note the two kits that *do* declare a slug for a real reason (`compute-js-auth`,
-// `compute-rust-auth`) predate the `compute-starter-kit-*` naming convention entirely, which is
-// why they can't be constructed and have to be spelled out.
+// Any kit whose URL doesn't follow this shape declares `slug` explicitly instead -- that field is
+// the only mechanism for exceptions, deliberately, so the rule here stays a single expression.
 export function derivedSlug(language: string, name: string): string {
-  const segment = language === 'javascript' && name.startsWith('typescript-') ? name : `${language}-${name}`;
-  return `compute-starter-kit-${segment}`;
+  return `compute-starter-kit-${language}-${name}`;
 }
 
 // Reads every kit's identity without doing any of the expensive build work, so the same rules
