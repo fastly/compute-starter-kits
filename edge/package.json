@@ -15,12 +15,12 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@fastly/js-compute": "^3.44.3",
+    "@fastly/js-compute": "^3.45.1",
     "@fastly/hono-fastly-compute": "^0.3.10",
     "hono": "^4.13.7"
   },
   "devDependencies": {
-    "@types/node": "^26.4.0",
+    "@types/node": "^26.5.0",
     "typescript": "^7.0.2",
     "vitest": "^4.1.11"
   }
