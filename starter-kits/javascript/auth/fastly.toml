@@ -10,7 +10,10 @@ service_id = ""
 
 [catalog]
 topics = ["authentication"]
-slug = "compute-js-auth"
+slug = "compute-starter-kit-javascript-oauth"
+# compute-js-auth is the URL this kit has been published under since before the
+# compute-starter-kit-* naming convention existed. It must keep resolving.
+alt_slugs = ["compute-js-auth"]
 
 [local_server]
 
