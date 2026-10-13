@@ -80,5 +80,3 @@ func main() {
 		fmt.Fprintf(w, "The page you requested could not be found\n")
 	})
 }
-
-// CI probe: forces this kit into the test matrix. Revert before merge.
