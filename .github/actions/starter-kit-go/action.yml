@@ -17,7 +17,7 @@ runs:
         cache-dependency-path: ${{ inputs.kit }}/go.sum
 
     - name: Set up Go (host toolchain for TinyGo)
-      # The tinygo kit's go.mod states "go 1.17" (its minimum *language* version), but
+      # The tinygo kit's go.mod states its minimum *language* version, but
       # the tinygo compiler itself needs a much newer host Go -- these are independent.
       # Must be >=1.24: tinygo 0.41.1's bundled net/http calls strings.SplitSeq/
       # FieldsFuncSeq (added in Go 1.24's stdlib), even though tinygo's own compat
