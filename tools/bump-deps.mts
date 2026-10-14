@@ -16,9 +16,10 @@
 // attributable to this run and revertible with a single `git checkout`. Use
 // --dry-run first; it reports the same plan and changes nothing.
 //
-// It deliberately does not build anything. Commit the sweep to a branch, open a
-// PR and add the `all-kits` label: test-starter-kits.yml then builds every kit
-// through the real Fastly CLI rather than only the changed ones.
+// It deliberately does not build anything. Commit the sweep to a branch and open
+// a PR: a bump writes each kit's manifest and lockfile, so those changed files
+// put exactly the bumped kits into test-starter-kits.yml's matrix, which builds
+// them through the real Fastly CLI.
 //
 // `npm install` leaves a node_modules/ in each kit it touches -- run
 // `node tools/clean-kits.mts` afterwards to reclaim the space.
@@ -274,7 +275,7 @@ console.log(
 );
 
 if (!dryRun && bumped.length > 0) {
-  console.log('Review with `git diff --stat`, then commit on a branch and label the PR `all-kits`.');
+  console.log('Review with `git diff --stat`, then commit on a branch and open a PR; CI builds each bumped kit.');
 }
 
 if (failed.length > 0) process.exit(1);
