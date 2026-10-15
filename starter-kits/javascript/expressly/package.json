@@ -2,7 +2,7 @@
   "type": "module",
   "private": true,
   "dependencies": {
-    "@fastly/expressly": "^2.0.0",
+    "@fastly/expressly": "^2.5.0",
     "@fastly/js-compute": "^4.0.1"
   },
   "devDependencies": {
