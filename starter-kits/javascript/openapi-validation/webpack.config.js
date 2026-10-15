@@ -14,6 +14,7 @@ export default {
     filename: "index.js",
     path: path.resolve(import.meta.dirname, "bin"),
     libraryTarget: "this",
+    publicPath: "",
   },
   module: {
     // Loaders go here.
@@ -38,7 +39,7 @@ export default {
     // Used for, e.g., any cross-platform WHATWG,
     // or core nodejs modules needed for your application.
     new webpack.ProvidePlugin({
-      process: "process/browser",
+      process: "process/browser.js",
     }),
   ],
   externals: [
