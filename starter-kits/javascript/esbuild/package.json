@@ -3,11 +3,11 @@
   "private": true,
   "dependencies": {
     "@fastly/js-compute": "^4.0.1",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
   },
   "devDependencies": {
-    "@fastly/cli": "^16.1.0",
+    "@fastly/cli": "^16.2.0",
     "esbuild": "^0.28.2"
   },
   "scripts": {
