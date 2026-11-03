@@ -3,14 +3,14 @@
   "private": true,
   "dependencies": {
     "@fastly/js-compute": "^4.0.1",
-    "@upstash/redis": "^1.39.0",
+    "@upstash/redis": "^1.40.0",
     "jws": "^4.0.0"
   },
   "devDependencies": {
-    "@fastly/cli": "^16.1.0",
+    "@fastly/cli": "^16.2.0",
     "buffer": "^6.0.3",
     "node-polyfill-webpack-plugin": "^2.0.1",
-    "webpack": "^5.111.1",
+    "webpack": "^5.112.2",
     "webpack-cli": "^5.1.4"
   },
   "scripts": {
