@@ -5,7 +5,7 @@
     "@fastly/js-compute": "^4.1.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.26.9",
+    "@babel/core": "^7.29.13",
     "@babel/preset-react": "^7.26.3",
     "@fastly/cli": "^16.2.0",
     "babel-loader": "^9.2.1",
