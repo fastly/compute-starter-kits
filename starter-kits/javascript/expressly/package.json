@@ -3,7 +3,7 @@
   "private": true,
   "dependencies": {
     "@fastly/expressly": "^2.5.0",
-    "@fastly/js-compute": "^4.0.1"
+    "@fastly/js-compute": "^4.1.0"
   },
   "devDependencies": {
     "@fastly/cli": "^16.2.0"
