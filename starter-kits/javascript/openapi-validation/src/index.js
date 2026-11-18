@@ -1,8 +1,14 @@
 /// <reference types="@fastly/js-compute" />
 
+import { enforceExplicitBackends } from "fastly:backend";
 import { env } from "fastly:env";
-import { includeBytes } from "fastly:experimental";
+import { includeBytes } from "fastly:runtime";
 import { OpenAPIValidator } from "openapi-backend";
+
+// As a basic security precaution, all Compute services written in
+// JavaScript should disable the use of implicitly-created dynamic
+// backends.
+enforceExplicitBackends();
 
 const textDecoder = new TextDecoder();
 

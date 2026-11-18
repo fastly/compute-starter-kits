@@ -2,7 +2,8 @@
 
 /// <reference types="@fastly/js-compute" />
 
-import { includeBytes } from "fastly:experimental";
+import { enforceExplicitBackends } from "fastly:backend";
+import { includeBytes } from "fastly:runtime";
 import * as jws from "jws";
 
 import fetchConfig from "./config.js";
@@ -21,6 +22,11 @@ import {
 import log from "./logging.js";
 
 import processView from "./views.js";
+
+// As a basic security precaution, all Compute services written in
+// JavaScript should disable the use of implicitly-created dynamic
+// backends.
+enforceExplicitBackends();
 
 const textDecoder = new TextDecoder();
 
