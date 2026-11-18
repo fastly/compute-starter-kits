@@ -1,6 +1,12 @@
 /// <reference types="@fastly/js-compute" />
 
+import { enforceExplicitBackends } from "fastly:backend";
 import { Router } from "@fastly/expressly";
+
+// As a basic security precaution, all Compute services written in
+// JavaScript should disable the use of implicitly-created dynamic
+// backends.
+enforceExplicitBackends();
 
 const router = new Router();
 

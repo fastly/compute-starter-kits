@@ -1,4 +1,4 @@
-import { includeBytes } from "fastly:experimental";
+import { includeBytes } from "fastly:runtime";
 
 const textDecoder = new TextDecoder();
 const styles = textDecoder.decode(includeBytes('src/static/style.css'));

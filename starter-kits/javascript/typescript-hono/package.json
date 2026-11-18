@@ -3,7 +3,7 @@
   "private": true,
   "dependencies": {
     "@fastly/hono-fastly-compute": "^0.4.0",
-    "@fastly/js-compute": "^4.1.0",
+    "@fastly/js-compute": "^4.3.0",
     "hono": "^4.13.17"
   },
   "devDependencies": {
