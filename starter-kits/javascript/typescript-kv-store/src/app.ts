@@ -1,7 +1,13 @@
 import { KVStore } from "fastly:kv-store";
+import { enforceExplicitBackends } from "fastly:backend";
 import { env } from "fastly:env";
 
 export async function app(event: FetchEvent) {
+    // As a basic security precaution, all Compute services written in
+    // TypeScript should disable the use of implicitly-created dynamic
+    // backends.
+    enforceExplicitBackends();
+
     // Log out which version of the Fastly Service is responding to this request.
     // This is useful to know when debugging.
     console.log(`FASTLY_SERVICE_VERSION: ${env('FASTLY_SERVICE_VERSION') || 'local'}`);

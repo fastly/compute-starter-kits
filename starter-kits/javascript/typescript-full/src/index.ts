@@ -3,8 +3,14 @@
 /// <reference types="@fastly/js-compute" />
 // import { CacheOverride } from "fastly:cache-override";
 // import { Logger } from "fastly:logger";
+import { enforceExplicitBackends } from "fastly:backend";
 import { env } from "fastly:env";
-import { includeBytes } from "fastly:experimental";
+import { includeBytes } from "fastly:runtime";
+
+// As a basic security precaution, all Compute services written in
+// TypeScript should disable the use of implicitly-created dynamic
+// backends.
+enforceExplicitBackends();
 
 // Load a static file as a Uint8Array at compile time.
 // File path is relative to root of project, not to this file

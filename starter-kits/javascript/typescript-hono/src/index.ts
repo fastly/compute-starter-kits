@@ -1,8 +1,14 @@
 import { CacheOverride } from 'fastly:cache-override';
-import { includeBytes } from 'fastly:experimental';
+import { enforceExplicitBackends } from 'fastly:backend';
+import { includeBytes } from 'fastly:runtime';
 import { buildFire, logFastlyServiceVersion } from '@fastly/hono-fastly-compute';
 import { createMiddleware } from 'hono/factory';
 import { Hono } from 'hono/quick';
+
+// As a basic security precaution, all Compute services written in
+// TypeScript should disable the use of implicitly-created dynamic
+// backends.
+enforceExplicitBackends();
 
 // Load a static file (relative to root of project) as a Uint8Array at compile time.
 const welcomePage = includeBytes('./src/welcome-to-compute.html');

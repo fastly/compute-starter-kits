@@ -1,7 +1,13 @@
 /// <reference types="@fastly/js-compute" />
 
+import { enforceExplicitBackends } from "fastly:backend";
 import { env } from "fastly:env";
 import { CacheOverride } from "fastly:cache-override";
+
+// As a basic security precaution, all Compute services written in
+// JavaScript should disable the use of implicitly-created dynamic
+// backends.
+enforceExplicitBackends();
 
 addEventListener("fetch", (event) => event.respondWith(handleRequest(event)));
 
