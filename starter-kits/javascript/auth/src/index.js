@@ -1,4 +1,5 @@
 /// <reference types="@fastly/js-compute" />
+import { enforceExplicitBackends } from "fastly:backend";
 import { env } from 'fastly:env'
 import pkceChallenge from 'pkce-challenge'
 import * as cookie from './lib/cookie'
@@ -6,6 +7,11 @@ import * as config from './lib/config'
 import * as responses from './lib/responses'
 import * as util from './lib/util'
 import * as jwt from './lib/jwt'
+
+// As a basic security precaution, all Compute services written in
+// JavaScript should disable the use of implicitly-created dynamic
+// backends.
+enforceExplicitBackends();
 
 addEventListener('fetch', event => event.respondWith(handleRequest(event)))
 
